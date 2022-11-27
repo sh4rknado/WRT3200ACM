@@ -1,0 +1,14 @@
+Package: kmod-rtl8812au-ac
+Version: 5.10.155+2021-05-22-0b87ed92-2
+Depends: kernel (=5.10.155-1-8fbe0911ede45c2bf526c95916438c16), kmod-cfg80211, kmod-usb-core
+Conflicts: kmod-rtl8812au-ct
+Source: package/kernel/rtl8812au-ac
+SourceName: kmod-rtl8812au-ac
+License: GPL-2.0
+LicenseFiles: LICENSE
+Section: kernel
+SourceDateEpoch: 1669549905
+Maintainer: Marty Jones <mj8263788@gmail.com>
+Architecture: arm_cortex-a9_vfpv3-d16
+Installed-Size: 772713
+Description:  Realtek RTL8812AU/21AU wireless drivers
