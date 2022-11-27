@@ -9,6 +9,8 @@ bash clean.sh
 ./scripts/feeds install -a
 
 cp scripts/configurations .config
+mkdir -pv /home/vagrant/WRT3200ACM/build_dir/target-arm_cortex-a9+vfpv3-d16_musl_eabi/linux-mvebu_cortexa9/
+cp -avr  rtl8812au-ac-2021-05-22-0b87ed92 /home/vagrant/WRT3200ACM/build_dir/target-arm_cortex-a9+vfpv3-d16_musl_eabi/linux-mvebu_cortexa9/
 make V=s -j5
 
 # update image builder

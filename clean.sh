@@ -8,6 +8,7 @@ rm -rfv  bin/
 rm -rfv build_dir/
 rm -rfv dl/
 rm -rfv key-build*
+rm -rfv openwrt-imagebuilder
 
 git clean -xfd
 
