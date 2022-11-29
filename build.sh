@@ -20,7 +20,7 @@ mv openwrt-imagebuilder-mvebu-cortexa9.Linux-x86_64/ /home/vagrant/WRT3200ACM/op
 rm -rfv openwrt-imagebuilder-mvebu-cortexa9.Linux-x86_64/
 
 # copy builder
-cd  ~/AR300M16-ext/openwrt-imagebuilder/
+cd  ~/WRT3200ACM/openwrt-imagebuilder/
 cp -avr ../overlay .
 mv overlay/build.sh build.sh
 mv overlay/repositories.conf repositories.conf
