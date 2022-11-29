@@ -2817,8 +2817,8 @@ CONFIG_PACKAGE_kmod-rt2x00-usb=y
 # CONFIG_PACKAGE_kmod-rtl8192de is not set
 # CONFIG_PACKAGE_kmod-rtl8192se is not set
 # CONFIG_PACKAGE_kmod-rtl8723bs is not set
-CONFIG_PACKAGE_kmod-rtl8812au-ac=y
-# CONFIG_PACKAGE_kmod-rtl8812au-ct is not set
+# CONFIG_PACKAGE_kmod-rtl8812au-ac=y
+CONFIG_PACKAGE_kmod-rtl8812au-ct=y
 # CONFIG_PACKAGE_kmod-rtl8821ae is not set
 # CONFIG_PACKAGE_kmod-rtl8xxxu is not set
 # CONFIG_PACKAGE_kmod-rtw88 is not set
@@ -3974,7 +3974,7 @@ CONFIG_OPENSSL_ENGINE=y
 # CONFIG_OPENSSL_ENGINE_BUILTIN is not set
 # CONFIG_PACKAGE_libopenssl-afalg is not set
 # CONFIG_PACKAGE_libopenssl-afalg_sync is not set
-# CONFIG_PACKAGE_libopenssl-conf is not set
+CONFIG_PACKAGE_libopenssl-conf=y
 # CONFIG_PACKAGE_libopenssl-devcrypto is not set
 # CONFIG_PACKAGE_libopenssl-gost_engine is not set
 CONFIG_PACKAGE_libwolfssl=y
@@ -4413,7 +4413,7 @@ CONFIG_PACKAGE_libreadline=y
 # CONFIG_PACKAGE_libspeex is not set
 # CONFIG_PACKAGE_libspeexdsp is not set
 # CONFIG_PACKAGE_libspice-server is not set
-# CONFIG_PACKAGE_libss is not set
+CONFIG_PACKAGE_libss=y
 # CONFIG_PACKAGE_libssh is not set
 CONFIG_PACKAGE_libssh2=y
 CONFIG_LIBSSH2_OPENSSL=y
@@ -5170,7 +5170,7 @@ CONFIG_PACKAGE_xtables-nft=y
 #
 # NMAP Suite
 #
-CONFIG_PACKAGE_ncat=y
+# CONFIG_PACKAGE_ncat is not set
 CONFIG_PACKAGE_ncat-full=y
 # CONFIG_PACKAGE_ncat-ssl is not set
 CONFIG_PACKAGE_ndiff=y
@@ -5760,7 +5760,7 @@ CONFIG_PACKAGE_fail2ban-src=y
 # CONFIG_PACKAGE_iputils-tracepath is not set
 # CONFIG_PACKAGE_ipvsadm is not set
 # CONFIG_PACKAGE_irtt is not set
-CONFIG_PACKAGE_iw=y
+# CONFIG_PACKAGE_iw is not set 
 CONFIG_PACKAGE_iw-full=y
 # CONFIG_PACKAGE_jool-tools-netfilter is not set
 # CONFIG_PACKAGE_keepalived is not set
@@ -5904,7 +5904,7 @@ CONFIG_PACKAGE_ppp-mod-pppoe=y
 # CONFIG_PACKAGE_tac_plus-pam is not set
 # CONFIG_PACKAGE_tayga is not set
 CONFIG_PACKAGE_tcpdump=y
-CONFIG_PACKAGE_tcpdump-mini=y
+# CONFIG_PACKAGE_tcpdump-mini is not set
 # CONFIG_PACKAGE_telnet-bsd is not set
 # CONFIG_PACKAGE_tgt is not set
 # CONFIG_PACKAGE_tmate-ssh-server is not set
