@@ -4852,7 +4852,7 @@ CONFIG_POSTFIX_SQLITE=y
 # CONFIG_POSTFIX_PGSQL is not set
 CONFIG_POSTFIX_PCRE=y
 # CONFIG_POSTFIX_EAI is not set
-# CONFIG_PACKAGE_ssmtp is not set
+CONFIG_PACKAGE_ssmtp=y
 
 #
 # Multimedia
