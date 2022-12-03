@@ -1684,7 +1684,7 @@ CONFIG_PACKAGE_rt2800-usb-firmware=y
 # CONFIG_PACKAGE_rt73-usb-firmware is not set
 # CONFIG_PACKAGE_rtl8188eu-firmware is not set
 # CONFIG_PACKAGE_rtl8192ce-firmware is not set
-# CONFIG_PACKAGE_rtl8192cu-firmware is not set
+CONFIG_PACKAGE_rtl8192cu-firmware=y
 # CONFIG_PACKAGE_rtl8192de-firmware is not set
 # CONFIG_PACKAGE_rtl8192eu-firmware is not set
 # CONFIG_PACKAGE_rtl8192se-firmware is not set
@@ -2010,7 +2010,7 @@ CONFIG_PACKAGE_kmod-nf-ipt6=y
 # CONFIG_PACKAGE_kmod-nf-ipvs is not set
 CONFIG_PACKAGE_kmod-nf-nat=y
 CONFIG_PACKAGE_kmod-nf-nat6=y
-# CONFIG_PACKAGE_kmod-nf-nathelper is not set
+CONFIG_PACKAGE_kmod-nf-nathelper=y
 # CONFIG_PACKAGE_kmod-nf-nathelper-extra is not set
 CONFIG_PACKAGE_kmod-nf-reject=y
 CONFIG_PACKAGE_kmod-nf-reject6=y
@@ -2257,7 +2257,7 @@ CONFIG_PACKAGE_kmod-usb-storage=y
 CONFIG_PACKAGE_kmod-usb-storage-extras=y
 CONFIG_PACKAGE_kmod-usb-storage-uas=y
 CONFIG_PACKAGE_kmod-usb-uhci=y
-# CONFIG_PACKAGE_kmod-usb-wdm is not set
+CONFIG_PACKAGE_kmod-usb-wdm=y
 # CONFIG_PACKAGE_kmod-usb-yealink is not set
 CONFIG_PACKAGE_kmod-usb2=y
 CONFIG_PACKAGE_kmod-usb2-pci=y
@@ -4589,7 +4589,7 @@ CONFIG_PACKAGE_libuuid=y
 # CONFIG_PACKAGE_pixman is not set
 # CONFIG_PACKAGE_poco is not set
 # CONFIG_PACKAGE_protobuf is not set
-# CONFIG_PACKAGE_protobuf-lite is not set
+CONFIG_PACKAGE_protobuf-lite=y
 # CONFIG_PACKAGE_pthsem is not set
 # CONFIG_PACKAGE_re2 is not set
 CONFIG_RE2_SHARED=y
@@ -5285,7 +5285,7 @@ CONFIG_PACKAGE_openssh-client=y
 # CONFIG_PACKAGE_openssh-client-utils is not set
 # CONFIG_PACKAGE_openssh-keygen is not set
 # CONFIG_PACKAGE_openssh-moduli is not set
-# CONFIG_PACKAGE_openssh-server is not set
+CONFIG_PACKAGE_openssh-server=y
 # CONFIG_PACKAGE_openssh-server-pam is not set
 # CONFIG_PACKAGE_openssh-sftp-avahi-service is not set
 # CONFIG_PACKAGE_openssh-sftp-client is not set
@@ -5500,15 +5500,15 @@ CONFIG_PACKAGE_nginx=y
 #
 # wireless
 #
-# CONFIG_PACKAGE_aircrack-ng is not set
-# CONFIG_PACKAGE_airmon-ng is not set
+CONFIG_PACKAGE_aircrack-ng=y
+CONFIG_PACKAGE_airmon-ng=y
 # CONFIG_PACKAGE_dynapoint is not set
 # CONFIG_PACKAGE_horst is not set
 # CONFIG_PACKAGE_kismet-client is not set
 # CONFIG_PACKAGE_kismet-drone is not set
 # CONFIG_PACKAGE_kismet-server is not set
-# CONFIG_PACKAGE_pixiewps is not set
-# CONFIG_PACKAGE_reaver is not set
+CONFIG_PACKAGE_pixiewps=y
+CONFIG_PACKAGE_reaver=y
 # CONFIG_PACKAGE_wavemon is not set
 # CONFIG_PACKAGE_wifischedule is not set
 # CONFIG_PACKAGE_464xlat is not set
@@ -5537,7 +5537,7 @@ CONFIG_PACKAGE_chat=y
 # CONFIG_PACKAGE_cifsmount is not set
 # CONFIG_PACKAGE_coap-server is not set
 # CONFIG_PACKAGE_conserver is not set
-# CONFIG_PACKAGE_cshark is not set
+CONFIG_PACKAGE_cshark=y
 # CONFIG_PACKAGE_daemonlogger is not set
 # CONFIG_PACKAGE_darkstat is not set
 # CONFIG_PACKAGE_dhcpcd is not set
@@ -5639,8 +5639,8 @@ CONFIG_PACKAGE_iw-full=y
 # CONFIG_PACKAGE_ncp is not set
 # CONFIG_PACKAGE_ndppd is not set
 # CONFIG_PACKAGE_ndptool is not set
-# CONFIG_PACKAGE_netcat is not set
-# CONFIG_PACKAGE_netdiscover is not set
+CONFIG_PACKAGE_netcat=y
+CONFIG_PACKAGE_netdiscover=y
 # CONFIG_PACKAGE_netifyd is not set
 # CONFIG_PACKAGE_netperf is not set
 # CONFIG_PACKAGE_nextdns is not set
@@ -6159,7 +6159,7 @@ CONFIG_PACKAGE_libjson-script=y
 # CONFIG_PACKAGE_lxc is not set
 # CONFIG_PACKAGE_lxc-unprivileged is not set
 # CONFIG_PACKAGE_maccalc is not set
-# CONFIG_PACKAGE_macchanger is not set
+CONFIG_PACKAGE_macchanger=y
 # CONFIG_PACKAGE_mbedtls-util is not set
 # CONFIG_PACKAGE_mbim-utils is not set
 # CONFIG_PACKAGE_mbtools is not set
