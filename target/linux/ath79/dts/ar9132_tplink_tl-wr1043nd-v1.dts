@@ -1,33 +1,39 @@
-// SPDX-License-Identifier: GPL-2.0-only
-
-#include "ar9132.dtsi"
+// SPDX-License-Identifier: GPL-2.0
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "ar9132.dtsi"
 
 / {
 	compatible = "tplink,tl-wr1043nd-v1", "qca,ar9132";
 	model = "TP-Link TL-WR1043ND v1";
 
 	aliases {
-		led-boot = &led_system;
-		led-failsafe = &led_system;
-		led-running = &led_system;
-		led-upgrade = &led_system;
-		label-mac-device = &eth0;
+		led-boot = &system;
+		led-failsafe = &system;
+		led-running = &system;
+		led-upgrade = &system;
+	};
+
+	extosc: ref {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <40000000>;
 	};
 
 	keys {
 		compatible = "gpio-keys";
 
-		reset {
+		button0 {
 			label = "reset";
 			linux,code = <KEY_RESTART>;
 			gpios = <&gpio 3 GPIO_ACTIVE_LOW>;
 			debounce-interval = <60>;
 		};
 
-		qss {
+		button1 {
 			label = "qss";
 			linux,code = <KEY_WPS_BUTTON>;
 			gpios = <&gpio 7 GPIO_ACTIVE_LOW>;
@@ -37,27 +43,26 @@
 
 	leds {
 		compatible = "gpio-leds";
-
 		usb {
-			label = "green:usb";
+			label = "tp-link:green:usb";
 			gpios = <&gpio 1 GPIO_ACTIVE_LOW>;
 			trigger-sources = <&hub_port>;
 			linux,default-trigger = "usbport";
 		};
 
-		led_system: system {
-			label = "green:system";
+		system: system {
+			label = "tp-link:green:system";
 			gpios = <&gpio 2 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "heartbeat";
 		};
 
 		qss {
-			label = "green:qss";
+			label = "tp-link:green:qss";
 			gpios = <&gpio 5 GPIO_ACTIVE_HIGH>;
 		};
 
 		wlan {
-			label = "green:wlan";
+			label = "tp-link:green:wlan";
 			gpios = <&gpio 9 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
@@ -73,8 +78,23 @@
 	};
 };
 
-&usb {
+&uart {
 	status = "okay";
+};
+
+&pll {
+	clocks = <&extosc>;
+};
+
+&usb {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+	hub_port: port@1 {
+		reg = <1>;
+		#trigger-source-cells = <0>;
+	};
 };
 
 &usb_phy {
@@ -83,12 +103,12 @@
 
 &spi {
 	status = "okay";
+	num-cs = <1>;
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
 		reg = <0>;
 		spi-max-frequency = <25000000>;
-		m25p,fast-read;
 
 		partitions {
 			compatible = "fixed-partitions";
@@ -120,8 +140,7 @@
 	status = "okay";
 
 	phy-mode = "rgmii";
-	nvmem-cells = <&macaddr_uboot_1fc00>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&uboot 0x1fc00>;
 
 	fixed-link {
 		speed = <1000>;
@@ -131,18 +150,6 @@
 
 &wmac {
 	status = "okay";
-
 	mtd-cal-data = <&art 0x1000>;
-	nvmem-cells = <&macaddr_uboot_1fc00>;
-	nvmem-cell-names = "mac-address";
-};
-
-&uboot {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_uboot_1fc00: macaddr@1fc00 {
-		reg = <0x1fc00 0x6>;
-	};
+	mtd-mac-address = <&uboot 0x1fc00>;
 };

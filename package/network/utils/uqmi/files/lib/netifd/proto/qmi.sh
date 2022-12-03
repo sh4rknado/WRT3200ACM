@@ -19,7 +19,6 @@ proto_qmi_init_config() {
 	proto_config_add_string modes
 	proto_config_add_string pdptype
 	proto_config_add_int profile
-	proto_config_add_boolean dhcp
 	proto_config_add_boolean dhcpv6
 	proto_config_add_boolean autoconnect
 	proto_config_add_int plmn
@@ -30,15 +29,15 @@ proto_qmi_init_config() {
 
 proto_qmi_setup() {
 	local interface="$1"
-	local dataformat connstat plmn_mode mcc mnc
+	local dataformat connstat
 	local device apn auth username password pincode delay modes pdptype
-	local profile dhcp dhcpv6 autoconnect plmn timeout mtu $PROTO_DEFAULT_OPTIONS
+	local profile dhcpv6 autoconnect plmn timeout mtu $PROTO_DEFAULT_OPTIONS
 	local ip4table ip6table
 	local cid_4 pdh_4 cid_6 pdh_6
 	local ip_6 ip_prefix_length gateway_6 dns1_6 dns2_6
 
 	json_get_vars device apn auth username password pincode delay modes
-	json_get_vars pdptype profile dhcp dhcpv6 autoconnect plmn ip4table
+	json_get_vars pdptype profile dhcpv6 autoconnect plmn ip4table
 	json_get_vars ip6table timeout mtu $PROTO_DEFAULT_OPTIONS
 
 	[ "$timeout" = "" ] && timeout="10"
@@ -83,7 +82,7 @@ proto_qmi_setup() {
 	local uninitialized_timeout=0
 	while uqmi -s -d "$device" --get-pin-status | grep '"UIM uninitialized"' > /dev/null; do
 		[ -e "$device" ] || return 1
-		if [ "$uninitialized_timeout" -lt "$timeout" -o "$timeout" = "0" ]; then
+		if [ "$uninitialized_timeout" -lt "$timeout" ]; then
 			let uninitialized_timeout++
 			sleep 1;
 		else
@@ -94,8 +93,7 @@ proto_qmi_setup() {
 		fi
 	done
 
-	if uqmi -s -d "$device" --uim-get-sim-state | grep -q '"Not supported"\|"Invalid QMI command"' &&
-	   uqmi -s -d "$device" --get-pin-status | grep -q '"Not supported"\|"Invalid QMI command"' ; then
+	if uqmi -s -d "$device" --get-pin-status | grep '"Not supported"\|"Invalid QMI command"' > /dev/null; then
 		[ -n "$pincode" ] && {
 			uqmi -s -d "$device" --verify-pin1 "$pincode" > /dev/null || uqmi -s -d "$device" --uim-verify-pin1 "$pincode" > /dev/null || {
 				echo "Unable to verify PIN"
@@ -105,12 +103,9 @@ proto_qmi_setup() {
 			}
 		}
 	else
+		. /usr/share/libubox/jshn.sh
 		json_load "$(uqmi -s -d "$device" --get-pin-status)"
 		json_get_var pin1_status pin1_status
-		if [ -z "$pin1_status" ]; then
-			json_load "$(uqmi -s -d "$device" --uim-get-sim-state)"
-			json_get_var pin1_status pin1_status
-		fi
 		json_get_var pin1_verify_tries pin1_verify_tries
 
 		case "$pin1_status" in
@@ -148,53 +143,35 @@ proto_qmi_setup() {
 				echo "PIN already verified"
 				;;
 			*)
-				echo "PIN status failed (${pin1_status:-sim_not_present})"
+				echo "PIN status failed ($pin1_status)"
 				proto_notify_error "$interface" PIN_STATUS_FAILED
 				proto_block_restart "$interface"
 				return 1
 			;;
 		esac
-		json_cleanup
 	fi
 
-	if [ -n "$plmn" ]; then
-		json_load "$(uqmi -s -d "$device" --get-plmn)"
-		json_get_var plmn_mode mode
-		json_get_vars mcc mnc || {
+	[ -n "$plmn" ] && {
+		local mcc mnc
+		if [ "$plmn" = 0 ]; then
 			mcc=0
 			mnc=0
-		}
-
-		if [ "$plmn" = "0" ]; then
-			if [ "$plmn_mode" != "automatic" ]; then
-				mcc=0
-				mnc=0
-				echo "Setting PLMN to auto"
-			fi
-		elif [ "$mcc" -ne "${plmn:0:3}" -o "$mnc" -ne "${plmn:3}" ]; then
+			echo "Setting PLMN to auto"
+		else
 			mcc=${plmn:0:3}
 			mnc=${plmn:3}
 			echo "Setting PLMN to $plmn"
-		else
-			mcc=""
-			mnc=""
 		fi
-	fi
-
-	if [ -n "$mcc" -a -n "$mnc" ]; then
 		uqmi -s -d "$device" --set-plmn --mcc "$mcc" --mnc "$mnc" > /dev/null 2>&1 || {
 			echo "Unable to set PLMN"
 			proto_notify_error "$interface" PLMN_FAILED
 			proto_block_restart "$interface"
 			return 1
 		}
-	fi
+	}
 
 	# Cleanup current state if any
 	uqmi -s -d "$device" --stop-network 0xffffffff --autoconnect > /dev/null 2>&1
-
-	# Go online
-	uqmi -s -d "$device" --set-device-operating-mode online > /dev/null 2>&1
 
 	# Set IP format
 	uqmi -s -d "$device" --set-data-format 802.3 > /dev/null 2>&1
@@ -214,44 +191,26 @@ proto_qmi_setup() {
 
 	uqmi -s -d "$device" --sync > /dev/null 2>&1
 
-	uqmi -s -d "$device" --network-register > /dev/null 2>&1
-
 	echo "Waiting for network registration"
-	sleep 1
 	local registration_timeout=0
-	local registration_state=""
-	while true; do
-		registration_state=$(uqmi -s -d "$device" --get-serving-system 2>/dev/null | jsonfilter -e "@.registration" 2>/dev/null)
-
-		[ "$registration_state" = "registered" ] && break
-
-		if [ "$registration_state" = "searching" ] || [ "$registration_state" = "not_registered" ]; then
-			if [ "$registration_timeout" -lt "$timeout" ] || [ "$timeout" = "0" ]; then
-				[ "$registration_state" = "searching" ] || {
-					echo "Device stopped network registration. Restart network registration"
-					uqmi -s -d "$device" --network-register > /dev/null 2>&1
-				}
-				let registration_timeout++
-				sleep 1
-				continue
-			fi
-			echo "Network registration failed, registration timeout reached"
+	while uqmi -s -d "$device" --get-serving-system | grep '"searching"' > /dev/null; do
+		[ -e "$device" ] || return 1
+		if [ "$registration_timeout" -lt "$timeout" ]; then
+			let registration_timeout++
+			sleep 1;
 		else
-			# registration_state is 'registration_denied' or 'unknown' or ''
-			echo "Network registration failed (reason: '$registration_state')"
+			echo "Network registration failed"
+			proto_notify_error "$interface" NETWORK_REGISTRATION_FAILED
+			proto_block_restart "$interface"
+			return 1
 		fi
-
-		proto_notify_error "$interface" NETWORK_REGISTRATION_FAILED
-		proto_block_restart "$interface"
-		return 1
 	done
 
 	[ -n "$modes" ] && uqmi -s -d "$device" --set-network-modes "$modes" > /dev/null 2>&1
 
 	echo "Starting network $interface"
 
-	pdptype="$(echo "$pdptype" | awk '{print tolower($0)}')"
-
+	pdptype=$(echo "$pdptype" | awk '{print tolower($0)}')
 	[ "$pdptype" = "ip" -o "$pdptype" = "ipv6" -o "$pdptype" = "ipv4v6" ] || pdptype="ip"
 
 	if [ "$pdptype" = "ip" ]; then
@@ -289,7 +248,7 @@ proto_qmi_setup() {
 		fi
 
 		# Check data connection state
-		connstat=$(uqmi -s -d "$device" --set-client-id wds,"$cid_4" --get-data-status)
+		connstat=$(uqmi -s -d "$device" --get-data-status)
 		[ "$connstat" == '"connected"' ] || {
 			echo "No data link!"
 			uqmi -s -d "$device" --set-client-id wds,"$cid_4" --release-client-id wds > /dev/null 2>&1
@@ -326,7 +285,7 @@ proto_qmi_setup() {
 		fi
 
 		# Check data connection state
-		connstat=$(uqmi -s -d "$device" --set-client-id wds,"$cid_6" --get-data-status)
+		connstat=$(uqmi -s -d "$device" --get-data-status)
 		[ "$connstat" == '"connected"' ] || {
 			echo "No data link!"
 			uqmi -s -d "$device" --set-client-id wds,"$cid_6" --release-client-id wds > /dev/null 2>&1
@@ -394,41 +353,15 @@ proto_qmi_setup() {
 	}
 
 	[ -n "$pdh_4" ] && {
-		if [ "$dhcp" = 0 ]; then
-			json_load "$(uqmi -s -d $device --set-client-id wds,$cid_4 --get-current-settings)"
-			json_select ipv4
-			json_get_var ip_4 ip
-			json_get_var gateway_4 gateway
-			json_get_var dns1_4 dns1
-			json_get_var dns2_4 dns2
-			json_get_var subnet_4 subnet
-
-			proto_init_update "$ifname" 1
-			proto_set_keep 1
-			proto_add_ipv4_address "$ip_4" "$subnet_4"
-			proto_add_ipv4_route "$gateway_4" "128"
-			[ "$defaultroute" = 0 ] || proto_add_ipv4_route "0.0.0.0" 0 "$gateway_4"
-			[ "$peerdns" = 0 ] || {
-				proto_add_dns_server "$dns1_4"
-				proto_add_dns_server "$dns2_4"
-			}
-			[ -n "$zone" ] && {
-				proto_add_data
-				json_add_string zone "$zone"
-				proto_close_data
-			}
-			proto_send_update "$interface"
-		else
-			json_init
-			json_add_string name "${interface}_4"
-			json_add_string ifname "@$interface"
-			json_add_string proto "dhcp"
-			[ -n "$ip4table" ] && json_add_string ip4table "$ip4table"
-			proto_add_dynamic_defaults
-			[ -n "$zone" ] && json_add_string zone "$zone"
-			json_close_object
-			ubus call network add_dynamic "$(json_dump)"
-		fi
+		json_init
+		json_add_string name "${interface}_4"
+		json_add_string ifname "@$interface"
+		json_add_string proto "dhcp"
+		[ -n "$ip4table" ] && json_add_string ip4table "$ip4table"
+		proto_add_dynamic_defaults
+		[ -n "$zone" ] && json_add_string zone "$zone"
+		json_close_object
+		ubus call network add_dynamic "$(json_dump)"
 	}
 }
 

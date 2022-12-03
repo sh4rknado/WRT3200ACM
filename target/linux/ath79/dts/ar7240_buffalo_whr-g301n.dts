@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "ar7240.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "ar7240.dtsi"
 
 / {
 	compatible = "buffalo,whr-g301n", "qca,ar7240";
 	model = "Buffalo WHR-G301N";
 
 	aliases {
-		led-boot = &led_diag;
-		led-failsafe = &led_diag;
-		led-upgrade = &led_diag;
+		led-boot = &diag;
+		led-failsafe = &diag;
+		led-upgrade = &diag;
 	};
 
 	keys {
-		compatible = "gpio-keys";
+		compatible = "gpio-keys-polled";
+		poll-interval = <20>;
 
 		router_on {
 			label = "router_on";
@@ -49,48 +51,48 @@
 		};
 	};
 
-	leds {
+	gpio-leds {
 		compatible = "gpio-leds";
 		pinctrl-names = "default";
 		pinctrl-0 = <&switch_led_pins>;
 
 		security {
-			label = "orange:security";
+			label = "whr-g301n:orange:security";
 			gpios = <&gpio 0 GPIO_ACTIVE_LOW>;
 		};
 
-		led_diag: diag {
-			label = "red:diag";
+		diag: diag {
+			label = "whr-g301n:red:diag";
 			gpios = <&gpio 1 GPIO_ACTIVE_LOW>;
 		};
 
 		router {
-			label = "green:router";
+			label = "whr-g301n:green:router";
 			gpios = <&gpio 6 GPIO_ACTIVE_LOW>;
 		};
 
 		lan1 {
-			label = "green:lan1";
+			label = "whr-g301n:green:lan1";
 			gpios = <&gpio 13 GPIO_ACTIVE_LOW>;
 		};
 
 		lan2 {
-			label = "green:lan2";
+			label = "whr-g301n:green:lan2";
 			gpios = <&gpio 14 GPIO_ACTIVE_LOW>;
 		};
 
 		lan3 {
-			label = "green:lan3";
+			label = "whr-g301n:green:lan3";
 			gpios = <&gpio 15 GPIO_ACTIVE_LOW>;
 		};
 
 		lan4 {
-			label = "green:lan4";
+			label = "whr-g301n:green:lan4";
 			gpios = <&gpio 16 GPIO_ACTIVE_LOW>;
 		};
 
 		wan {
-			label = "green:wan";
+			label = "whr-g301n:green:wan";
 			gpios = <&gpio 17 GPIO_ACTIVE_LOW>;
 		};
 	};
@@ -99,7 +101,7 @@
 		compatible = "gpio-leds";
 
 		wlan {
-			label = "green:wlan";
+			label = "whr-g301n:green:wlan";
 			gpios = <&ath9k 1 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
@@ -108,6 +110,7 @@
 
 &spi {
 	status = "okay";
+	num-cs = <1>;
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
@@ -153,16 +156,14 @@
 };
 
 &eth0 {
-	nvmem-cells = <&macaddr_art_120c>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&art 0x120c>;
 };
 
 &eth1 {
 	status = "okay";
 
-	nvmem-cells = <&macaddr_art_120c>;
-	nvmem-cell-names = "mac-address";
-	mac-address-increment = <1>;
+	mtd-mac-address = <&art 0x120c>;
+	mtd-mac-address-increment = <1>;
 };
 
 &pcie {
@@ -172,8 +173,7 @@
 		compatible = "pci168c,002a";
 		reg = <0x0000 0 0 0 0>;
 		qca,no-eeprom;
-		nvmem-cells = <&macaddr_art_120c>;
-		nvmem-cell-names = "mac-address";
+		mtd-mac-address = <&art 0x120c>;
 		#gpio-cells = <2>;
 		gpio-controller;
 	};
@@ -185,12 +185,6 @@
 	};
 };
 
-&art {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_art_120c: macaddr@120c {
-		reg = <0x120c 0x6>;
-	};
+&uart {
+	status = "okay";
 };

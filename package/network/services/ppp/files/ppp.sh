@@ -220,7 +220,9 @@ proto_pppoe_setup() {
 	local config="$1"
 	local iface="$2"
 
-	/sbin/modprobe -qa slhc ppp_generic pppox pppoe
+	for module in slhc ppp_generic pppox pppoe; do
+		/sbin/insmod $module 2>&- >&-
+	done
 
 	json_get_var mtu mtu
 	mtu="${mtu:-1492}"
@@ -232,7 +234,7 @@ proto_pppoe_setup() {
 	json_get_var padi_timeout padi_timeout
 
 	ppp_generic_setup "$config" \
-		plugin pppoe.so \
+		plugin rp-pppoe.so \
 		${ac:+rp_pppoe_ac "$ac"} \
 		${service:+rp_pppoe_service "$service"} \
 		${host_uniq:+host-uniq "$host_uniq"} \
@@ -260,7 +262,9 @@ proto_pppoa_setup() {
 	local config="$1"
 	local iface="$2"
 
-	/sbin/modprobe -qa slhc ppp_generic pppox pppoatm
+	for module in slhc ppp_generic pppox pppoatm; do
+		/sbin/insmod $module 2>&- >&-
+	done
 
 	json_get_vars atmdev vci vpi encaps
 
@@ -307,8 +311,13 @@ proto_pptp_setup() {
 		exit 1
 	}
 
-	/sbin/modprobe -qa slhc ppp_generic ppp_async ppp_mppe ip_gre gre pptp
-	sleep 1
+	local load
+	for module in slhc ppp_generic ppp_async ppp_mppe ip_gre gre pptp; do
+		grep -q "^$module " /proc/modules && continue
+		/sbin/insmod $module 2>&- >&-
+		load=1
+	done
+	[ "$load" = "1" ] && sleep 1
 
 	ppp_generic_setup "$config" \
 		plugin pptp.so \
@@ -322,7 +331,8 @@ proto_pptp_teardown() {
 
 [ -n "$INCLUDE_ONLY" ] || {
 	add_protocol ppp
-	[ -f /usr/lib/pppd/*/pppoe.so ] && add_protocol pppoe
+	[ -f /usr/lib/pppd/*/rp-pppoe.so ] && add_protocol pppoe
 	[ -f /usr/lib/pppd/*/pppoatm.so ] && add_protocol pppoa
 	[ -f /usr/lib/pppd/*/pptp.so ] && add_protocol pptp
 }
+

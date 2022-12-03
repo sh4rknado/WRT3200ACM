@@ -1,6 +1,6 @@
 --- a/configure
 +++ b/configure
-@@ -267,7 +267,7 @@ EOF
+@@ -228,7 +228,7 @@ EOF
  
  check_elf()
  {

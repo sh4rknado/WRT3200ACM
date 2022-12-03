@@ -9,6 +9,7 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=trelay
+PKG_VERSION:=0.1
 PKG_RELEASE:=2
 
 include $(INCLUDE_DIR)/package.mk
@@ -31,7 +32,7 @@ endef
 include $(INCLUDE_DIR)/kernel-defaults.mk
 
 define Build/Compile
-	$(KERNEL_MAKE) M="$(PKG_BUILD_DIR)" modules
+	$(KERNEL_MAKE) SUBDIRS="$(PKG_BUILD_DIR)" modules
 endef
 
 define KernelPackage/trelay/conffiles

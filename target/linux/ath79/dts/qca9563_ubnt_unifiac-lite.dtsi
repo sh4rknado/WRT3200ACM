@@ -2,15 +2,10 @@
 
 #include "qca9563_ubnt_unifiac.dtsi"
 
-/ {
-	aliases {
-		label-mac-device = &eth0;
-	};
-};
-
 &mdio0 {
 	status = "okay";
 
+	phy-mask = <4>;
 	phy4: ethernet-phy@4 {
 		phy-mode = "sgmii";
 		reg = <4>;
@@ -20,10 +15,6 @@
 &eth0 {
 	status = "okay";
 
-	nvmem-cells = <&macaddr_art_0>;
-	nvmem-cell-names = "mac-address";
-	phy-mode = "sgmii";
+	mtd-mac-address = <&eeprom 0x0>;
 	phy-handle = <&phy4>;
-
-	pll-data = <0x03000000 0x00000101 0x00001313>;
 };

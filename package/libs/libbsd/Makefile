@@ -1,21 +1,19 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=libbsd
-PKG_VERSION:=0.11.7
-PKG_RELEASE:=1
+PKG_VERSION:=0.8.7
+PKG_RELEASE:=3
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_HASH:=f548f10e5af5a08b1e22889ce84315b1ebe41505b015c9596bad03fd13a12b31
 PKG_SOURCE_URL:=https://libbsd.freedesktop.org/releases
-PKG_HASH:=9baa186059ebbf25c06308e9f991fda31f7183c0f24931826d83aa6abd8a0261
 
 PKG_LICENSE:=BSD-4-Clause
 PKG_LICENSE_FILES:=COPYING
 
-PKG_INSTALL:=1
-PKG_BUILD_PARALLEL:=1
-PKG_BUILD_DEPENDS := libmd
-
 include $(INCLUDE_DIR)/package.mk
+
+PKG_INSTALL:=1
 
 define Package/libbsd
   SECTION:=libs
@@ -43,3 +41,4 @@ define Package/libbsd/install
 endef
 
 $(eval $(call BuildPackage,libbsd))
+

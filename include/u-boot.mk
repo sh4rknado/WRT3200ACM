@@ -3,8 +3,7 @@ PKG_NAME ?= u-boot
 ifndef PKG_SOURCE_PROTO
 PKG_SOURCE = $(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL = \
-	https://mirror.cyberbits.eu/u-boot \
-	https://ftp.denx.de/pub/u-boot \
+	https://sources.openwrt.org \
 	ftp://ftp.denx.de/pub/u-boot
 endif
 
@@ -44,13 +43,7 @@ TARGET_DEP = TARGET_$(BUILD_TARGET)$(if $(BUILD_SUBTARGET),_$(BUILD_SUBTARGET))
 UBOOT_MAKE_FLAGS = \
 	HOSTCC="$(HOSTCC)" \
 	HOSTCFLAGS="$(HOST_CFLAGS) $(HOST_CPPFLAGS) -std=gnu11" \
-	HOSTLDFLAGS="$(HOST_LDFLAGS)" \
-	LOCALVERSION="-OpenWrt-$(REVISION)" \
-	STAGING_PREFIX="$(STAGING_DIR_HOST)" \
-	PKG_CONFIG_PATH="$(STAGING_DIR_HOST)/lib/pkgconfig" \
-	PKG_CONFIG_LIBDIR="$(STAGING_DIR_HOST)/lib/pkgconfig" \
-	PKG_CONFIG_EXTRAARGS="--static" \
-	$(if $(findstring c,$(OPENWRT_VERBOSE)),V=1,V='')
+	HOSTLDFLAGS="$(HOST_LDFLAGS)"
 
 define Build/U-Boot/Target
   $(eval $(call U-Boot/Init,$(1)))

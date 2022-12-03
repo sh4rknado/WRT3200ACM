@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "qca955x.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "qca9557.dtsi"
 
 / {
 	compatible = "tplink,tl-wr941n-v7-cn", "qca,qca9558";
@@ -14,26 +15,25 @@
 		led-failsafe = &led_system;
 		led-running = &led_system;
 		led-upgrade = &led_system;
-		label-mac-device = &eth0;
 	};
 
 	leds {
 		compatible = "gpio-leds";
 
 		led_system: system {
-			label = "green:system";
+			label = "tp-link:green:system";
 			gpios = <&gpio 19 GPIO_ACTIVE_LOW>;
 			default-state = "on";
 		};
 
 		wlan {
-			label = "green:wlan";
+			label = "tp-link:green:wlan";
 			gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
 
 		qss {
-			label = "green:qss";
+			label = "tp-link:green:qss";
 			gpios = <&gpio 15 GPIO_ACTIVE_LOW>;
 		};
 	};
@@ -57,8 +57,13 @@
 	};
 };
 
+&uart {
+	status = "okay";
+};
+
 &spi {
 	status = "okay";
+	num-cs = <1>;
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
@@ -103,8 +108,7 @@
 &eth0 {
 	status = "okay";
 	phy-mode = "mii";
-	nvmem-cells = <&macaddr_uboot_1fc00>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&uboot 0x1fc00>;
 	fixed-link {
 		speed = <100>;
 		full-duplex;
@@ -114,16 +118,5 @@
 &wmac {
 	status = "okay";
 	mtd-cal-data = <&art 0x1000>;
-	nvmem-cells = <&macaddr_uboot_1fc00>;
-	nvmem-cell-names = "mac-address";
-};
-
-&uboot {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_uboot_1fc00: macaddr@1fc00 {
-		reg = <0x1fc00 0x6>;
-	};
+	mtd-mac-address = <&uboot 0x1fc00>;
 };

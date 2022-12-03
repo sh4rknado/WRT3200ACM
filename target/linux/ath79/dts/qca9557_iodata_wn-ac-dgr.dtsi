@@ -1,52 +1,54 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "qca955x.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 
+#include "qca9557.dtsi"
+
 / {
 	aliases {
-		led-boot = &led_power;
-		led-failsafe = &led_power;
-		led-running = &led_power;
-		led-upgrade = &led_power;
+		led-boot = &power;
+		led-failsafe = &power;
+		led-running = &power;
+		led-upgrade = &power;
 	};
 
 	leds: leds {
 		compatible = "gpio-leds";
 
-		led_power: power {
-			label = "green:power";
+		power: power {
+			label = "iodata:green:power";
 			gpios = <&gpio 14 GPIO_ACTIVE_LOW>;
 			default-state = "on";
 		};
 
 		eco {
-			label = "green:eco";
+			label = "iodata:green:eco";
 			gpios = <&gpio 3 GPIO_ACTIVE_LOW>;
 		};
 
 		wlan5g {
-			label = "green:wlan5g";
+			label = "iodata:green:wlan5g";
 			gpios = <&gpio 21 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
 
 		wlan2g {
-			label = "green:wlan2g";
+			label = "iodata:green:wlan2g";
 			gpios = <&gpio 22 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy1tpt";
 		};
 
 		notification {
-			label = "amber:notification";
+			label = "iodata:amber:notification";
 			gpios = <&gpio 23 GPIO_ACTIVE_LOW>;
 		};
 	};
 
 	keys: keys {
-		compatible = "gpio-keys";
+		compatible = "gpio-keys-polled";
+		poll-interval = <20>;
 
 		eco {
 			label = "eco";
@@ -89,6 +91,7 @@
 
 &spi {
 	status = "okay";
+	num-cs = <1>;
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
@@ -174,6 +177,10 @@
 	};
 };
 
+&uart {
+	status = "okay";
+};
+
 &usb_phy0 {
 	status = "okay";
 };
@@ -184,6 +191,5 @@
 
 &wmac {
 	status = "okay";
-
 	qca,no-eeprom;
 };

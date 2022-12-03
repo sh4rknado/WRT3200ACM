@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Copyright (c) 2018 Yousong Zhou <yszhou4tech@gmail.com>
 #
@@ -20,7 +20,7 @@ import ssl
 import subprocess
 import sys
 import time
-import urllib.request
+import urllib2
 
 TMPDIR = os.environ.get('TMP_DIR') or '/tmp'
 TMPDIR_DL = os.path.join(TMPDIR, 'dl')
@@ -194,7 +194,7 @@ class GitHubCommitTsCache(object):
             self.cache[k] = (ts, updated)
 
     def _cache_flush(self, fout):
-        cache = sorted(self.cache.items(), key=lambda a: a[1][1])
+        cache = sorted(self.cache.iteritems(), cmp=lambda a, b: b[1][1] - a[1][1])
         cache = cache[:self.__cachen]
         self.cache = {}
         os.ftruncate(fout.fileno(), 0)
@@ -207,7 +207,7 @@ class GitHubCommitTsCache(object):
 
 
 class DownloadGitHubTarball(object):
-    """Download and repack archive tarball from GitHub.
+    """Download and repack archive tarabll from GitHub.
 
     Compared with the method of packing after cloning the whole repo, this
     method is more friendly to users with fragile internet connection.
@@ -220,7 +220,7 @@ class DownloadGitHubTarball(object):
 
      - GitHub archives do not contain source codes for submodules.
 
-     - GitHub archives seem to respect .gitattributes and ignore paths with
+     - GitHub archives seem to respect .gitattributes and ignore pathes with
        export-ignore attributes.
 
     For the first two issues, the method will fail loudly to allow fallback to
@@ -345,7 +345,6 @@ class DownloadGitHubTarball(object):
         version_is_sha1sum = len(self.version) == 40
         if not version_is_sha1sum:
             apis.insert(0, apis.pop())
-        reasons = ''
         for api in apis:
             url = api['url']
             attr_path = api['attr_path']
@@ -358,9 +357,9 @@ class DownloadGitHubTarball(object):
                 self.commit_ts = ct
                 self.commit_ts_cache.set(url, ct)
                 return
-            except Exception as e:
-                reasons += '\n' + ("  {}: {}".format(url, e))
-        raise self._error('Cannot fetch commit ts:{}'.format(reasons))
+            except Exception:
+                pass
+        raise self._error('Cannot fetch commit ts: {}'.format(url))
 
     def _init_commit_ts_remote_get(self, url, attrpath):
         resp = self._make_request(url)
@@ -398,9 +397,9 @@ class DownloadGitHubTarball(object):
             'Accept': 'application/vnd.github.v3+json',
             'User-Agent': 'OpenWrt',
         }
-        req = urllib.request.Request(url, headers=headers)
+        req = urllib2.Request(url, headers=headers)
         sslcontext = ssl._create_unverified_context()
-        fileobj = urllib.request.urlopen(req, context=sslcontext)
+        fileobj = urllib2.urlopen(req, context=sslcontext)
         return fileobj
 
     def _error(self, msg):

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: GPL-2.0+
 
 /*
  * Sophos RED 15w Rev.1 Board Setup

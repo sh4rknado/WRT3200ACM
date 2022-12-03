@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 #   Empty/wrong machtype-workaround generator
 #

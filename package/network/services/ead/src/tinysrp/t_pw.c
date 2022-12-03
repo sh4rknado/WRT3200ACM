@@ -94,10 +94,8 @@ t_openpw(fp)
   else
     close_flag = 0;
 
-  if((tpw = malloc(sizeof(struct t_pw))) == NULL) {
-    fclose(fp);
+  if((tpw = malloc(sizeof(struct t_pw))) == NULL)
     return NULL;
-  }
   tpw->instream = fp;
   tpw->close_on_exit = close_flag;
   tpw->state = FILE_ONLY;

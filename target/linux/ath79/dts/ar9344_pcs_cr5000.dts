@@ -1,23 +1,26 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "ar9344.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "ar9344.dtsi"
 
 / {
 	model = "PowerCloud Systems CR5000";
 	compatible = "pcs,cr5000", "qca,ar9344";
 
 	aliases {
-		led-boot = &led_power;
-		led-failsafe = &led_power;
-		led-running = &led_power;
-		led-upgrade = &led_power;
+		serial0 = &uart;
+		led-boot = &status;
+		led-failsafe = &status;
+		led-running = &status;
+		led-upgrade = &status;
 	};
 
 	keys {
-		compatible = "gpio-keys";
+		compatible = "gpio-keys-polled";
+		poll-interval = <20>;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&jtag_disable_pins>;
@@ -40,21 +43,21 @@
 	leds {
 		compatible = "gpio-leds";
 
-		led_power: power {
-			label = "amber:power";
+		status: power {
+			label = "pcs:amber:power";
 			gpios = <&gpio 2 GPIO_ACTIVE_LOW>,
 				<&gpio 4 GPIO_ACTIVE_LOW>;
 			default-state = "on";
 		};
 
 		wlan2g {
-			label = "blue:wlan";
+			label = "pcs:blue:wlan";
 			gpios = <&gpio 14 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
 
 		wps_white {
-			label = "white:wps";
+			label = "pcs:white:wps";
 			gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
 		};
 	};
@@ -64,7 +67,17 @@
 	clock-frequency = <25000000>;
 };
 
+&uart {
+	status = "okay";
+};
+
+&gpio {
+	status = "okay";
+};
+
 &spi {
+	num-cs = <1>;
+
 	status = "okay";
 
 	flash@0 {
@@ -106,6 +119,13 @@
 
 &usb {
 	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	hub_port1: port@1 {
+		reg = <1>;
+		#trigger-source-cells = <0>;
+	};
 };
 
 &usb_phy {
@@ -118,8 +138,7 @@
 	ath9k: wifi@0,0 {
 		compatible = "pci168c,0030";
 		reg = <0x0000 0 0 0 0>;
-		nvmem-cells = <&macaddr_art_5002>;
-		nvmem-cell-names = "mac-address";
+		mtd-mac-address = <&art 0x5002>;
 		#gpio-cells = <2>;
 		gpio-controller;
 	};
@@ -127,6 +146,8 @@
 
 &mdio0 {
 	status = "okay";
+
+	phy-mask = <0>;
 
 	phy0: ethernet-phy@0 {
 		reg = <0>;
@@ -151,11 +172,11 @@
 	/* default for ar934x, except for 1000M */
 	pll-data = <0x06000000 0x00000101 0x00001616>;
 
-	nvmem-cells = <&macaddr_art_0>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&art 0x0>;
 
 	phy-mode = "rgmii";
 	phy-handle = <&phy0>;
+
 
 	aliases {
 		ag0 = &eth1;
@@ -201,18 +222,5 @@
 	status = "okay";
 
 	mtd-cal-data = <&art 0x1000>;
-};
-
-&art {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_art_0: macaddr@0 {
-		reg = <0x0 0x6>;
-	};
-
-	macaddr_art_5002: macaddr@5002 {
-		reg = <0x5002 0x6>;
-	};
+	mtd-mac-address = <&art 0x1002>;
 };

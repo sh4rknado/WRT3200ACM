@@ -1,6 +1,9 @@
-# SPDX-License-Identifier: GPL-2.0-only
 #
-# Copyright (C) 2006-2020 OpenWrt.org
+# Copyright (C) 2006-2010 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
 
 include $(INCLUDE_DIR)/download.mk
 
@@ -21,7 +24,7 @@ include $(INCLUDE_DIR)/depends.mk
 include $(INCLUDE_DIR)/quilt.mk
 
 BUILD_TYPES += host
-HOST_STAMP_PREPARED=$(HOST_BUILD_DIR)/.prepared$(if $(HOST_QUILT)$(DUMP),,$(shell $(call $(if $(CONFIG_AUTOREMOVE),find_md5_reproducible,find_md5),${CURDIR} $(PKG_FILE_DEPENDS),))_$(call confvar,CONFIG_AUTOREMOVE $(HOST_PREPARED_DEPENDS)))
+HOST_STAMP_PREPARED=$(HOST_BUILD_DIR)/.prepared$(if $(HOST_QUILT)$(DUMP),,$(shell $(call find_md5,${CURDIR} $(PKG_FILE_DEPENDS),))_$(call confvar,CONFIG_AUTOREMOVE $(HOST_PREPARED_DEPENDS)))
 HOST_STAMP_CONFIGURED:=$(HOST_BUILD_DIR)/.configured
 HOST_STAMP_BUILT:=$(HOST_BUILD_DIR)/.built
 HOST_BUILD_PREFIX?=$(if $(IS_PACKAGE_BUILD),$(STAGING_DIR_HOSTPKG),$(STAGING_DIR_HOST))
@@ -51,7 +54,6 @@ HOST_CONFIGURE_VARS = \
 	CFLAGS="$(HOST_CFLAGS)" \
 	CXX="$(HOSTCXX)" \
 	CPPFLAGS="$(HOST_CPPFLAGS)" \
-	CXXFLAGS="$(HOST_CXXFLAGS)" \
 	LDFLAGS="$(HOST_LDFLAGS)" \
 	CONFIG_SHELL="$(SHELL)"
 
@@ -130,6 +132,7 @@ define Host/Exports/Default
   $(1) : export STAGING_PREFIX=$$(HOST_BUILD_PREFIX)
   $(1) : export PKG_CONFIG_PATH=$$(STAGING_DIR_HOST)/lib/pkgconfig:$$(HOST_BUILD_PREFIX)/lib/pkgconfig
   $(1) : export PKG_CONFIG_LIBDIR=$$(HOST_BUILD_PREFIX)/lib/pkgconfig
+  $(if $(CONFIG_CCACHE),$(1) : export CCACHE_DIR:=$(STAGING_DIR_HOST)/ccache)
   $(if $(HOST_CONFIG_SITE),$(1) : export CONFIG_SITE:=$(HOST_CONFIG_SITE))
   $(if $(IS_PACKAGE_BUILD),$(1) : export PATH=$$(TARGET_PATH_PKG))
 endef
@@ -181,7 +184,7 @@ ifndef DUMP
     clean-build: host-clean-build
   endif
 
-  $(call check_download_integrity)
+  $(DL_DIR)/$(FILE): FORCE
 
   $(_host_target)host-prepare: $(HOST_STAMP_PREPARED)
   $(_host_target)host-configure: $(HOST_STAMP_CONFIGURED)
@@ -189,22 +192,22 @@ ifndef DUMP
   host-install: host-compile
 
   host-clean-build: FORCE
-	$(call Host/Uninstall)
 	rm -rf $(HOST_BUILD_DIR) $(HOST_STAMP_BUILT)
 
   host-clean: host-clean-build
 	$(call Host/Clean)
+	$(call Host/Uninstall)
 	rm -rf $(HOST_STAMP_INSTALLED)
 
     ifneq ($(CONFIG_AUTOREMOVE),)
       host-compile:
-		$(FIND) $(HOST_BUILD_DIR) -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -print0 | \
-			$(XARGS) -0 rm -rf
+		$(FIND) $(HOST_BUILD_DIR) -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' | \
+			$(XARGS) rm -rf
     endif
   endef
 endif
 
 define HostBuild
   $(HostBuild/Core)
-  $(if $(if $(PKG_HOST_ONLY),,$(if $(and $(filter host-%,$(MAKECMDGOALS)),$(PKG_SKIP_DOWNLOAD)),,$(STAMP_PREPARED))),,$(if $(strip $(PKG_SOURCE_URL)),$(call Download,default)))
+  $(if $(if $(PKG_HOST_ONLY),,$(STAMP_PREPARED)),,$(if $(strip $(PKG_SOURCE_URL)),$(call Download,default)))
 endef

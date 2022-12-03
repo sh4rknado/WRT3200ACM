@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=valgrind
-PKG_VERSION:=3.20.0
+PKG_VERSION:=3.15.0
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-PKG_SOURCE_URL:=https://sourceware.org/pub/valgrind/
-PKG_HASH:=8536c031dbe078d342f121fa881a9ecd205cb5a78e639005ad570011bdb9f3c6
+PKG_SOURCE_URL:=http://sourceware.org/pub/valgrind/
+PKG_HASH:=417c7a9da8f60dd05698b3a7bc6002e4ef996f14c13f0ff96679a16873e78ab1
 
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 PKG_LICENSE:=GPL-2.0+
@@ -25,15 +25,13 @@ PKG_BUILD_PARALLEL := 1
 PKG_USE_MIPS16:=0
 PKG_SSP:=0
 
-STRIP:=:
-
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 define Package/valgrind
   SECTION:=devel
   CATEGORY:=Development
-  DEPENDS:=@mips||mipsel||mips64||mips64el||i386||x86_64||powerpc||arm_v7||aarch64 +libpthread +librt
+  DEPENDS:=@mips||mipsel||i386||x86_64||powerpc||arm_v7||aarch64 +libpthread +librt
   TITLE:=debugging and profiling tools for Linux
   URL:=http://www.valgrind.org
 endef
@@ -98,7 +96,6 @@ else
 endif
 
 CONFIGURE_ARGS += \
-	--enable-lto \
 	--enable-tls \
 	--without-x \
 	--without-mpicc \
@@ -109,7 +106,7 @@ CONFIGURE_ARGS += \
 	--without-included-gettext \
 	--with-pagesize=4 \
 
-define Package/valgrind/install
+define Package/valgrind/install	
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/valgrind* $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/lib/valgrind
@@ -128,10 +125,6 @@ ifneq ($(ARCH),aarch64)
 		$(PKG_INSTALL_DIR)/usr/lib/valgrind/$(CPU)-*.xml \
 		$(1)/usr/lib/valgrind/
 endif
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/bin
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip -g",$(RSTRIP)) \
-		$(PKG_INSTALL_DIR)/usr/lib/valgrind/none-* \
-		$(PKG_INSTALL_DIR)/usr/lib/valgrind/memcheck-*
 endef
 
 define Package/valgrind-cachegrind/install
@@ -141,8 +134,6 @@ define Package/valgrind-cachegrind/install
 	$(CP) \
 		$(PKG_INSTALL_DIR)/usr/lib/valgrind/cachegrind-* \
 		$(1)/usr/lib/valgrind/
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/bin
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip -g",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/lib/valgrind/cachegrind-*
 endef
 
 define Package/valgrind-callgrind/install
@@ -152,8 +143,6 @@ define Package/valgrind-callgrind/install
 	$(CP) \
 		$(PKG_INSTALL_DIR)/usr/lib/valgrind/callgrind-* \
 		$(1)/usr/lib/valgrind/
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/bin
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip -g",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/lib/valgrind/callgrind-*
 endef
 
 define Package/valgrind-drd/install
@@ -162,8 +151,6 @@ define Package/valgrind-drd/install
 		$(PKG_INSTALL_DIR)/usr/lib/valgrind/drd-* \
 		$(PKG_INSTALL_DIR)/usr/lib/valgrind/vgpreload_drd*.so \
 		$(1)/usr/lib/valgrind/
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/bin
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip -g",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/lib/valgrind/drd-*
 endef
 
 define Package/valgrind-massif/install
@@ -174,8 +161,6 @@ define Package/valgrind-massif/install
 		$(PKG_INSTALL_DIR)/usr/lib/valgrind/massif-* \
 		$(PKG_INSTALL_DIR)/usr/lib/valgrind/vgpreload_massif*.so \
 		$(1)/usr/lib/valgrind/
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/bin
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip -g",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/lib/valgrind/massif-*
 endef
 
 define Package/valgrind-helgrind/install
@@ -184,14 +169,11 @@ define Package/valgrind-helgrind/install
 		$(PKG_INSTALL_DIR)/usr/lib/valgrind/helgrind-* \
 		$(PKG_INSTALL_DIR)/usr/lib/valgrind/vgpreload_helgrind*.so \
 		$(1)/usr/lib/valgrind/
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/bin
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip -g",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/lib/valgrind/helgrind-*
 endef
 
 define Package/valgrind-vgdb/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vgdb $(1)/usr/bin/
-	$(patsubst STRIP=%,STRIP="$(TARGET_CROSS)strip",$(RSTRIP)) $(PKG_INSTALL_DIR)/usr/bin
 endef
 
 $(eval $(call BuildPackage,valgrind))

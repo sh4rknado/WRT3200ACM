@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/dts-v1/;
 
 #include "ar7242_buffalo_wzr-bhr.dtsi"
 
@@ -7,24 +8,10 @@
 	model = "Buffalo BHR-4GRV";
 };
 
-&leds {
-	sec_vpn {
-		label = "orange:vpn";
-		gpios = <&gpio 13 GPIO_ACTIVE_LOW>;
-	};
-};
-
 &eth0 {
-	nvmem-cells = <&macaddr_art_0>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&art 0x0>;
 };
 
-&art {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_art_0: macaddr@0 {
-		reg = <0x0 0x6>;
-	};
+&sec_vpn {
+	label = "buffalo:orange:vpn";
 };

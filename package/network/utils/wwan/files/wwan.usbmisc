@@ -17,8 +17,7 @@ find_wwan_iface() {
 	[ -z "$device" -a "$proto" = wwan ] || [ "$device" = "/dev/$DEVNAME" ] || return 0
 	if [ "$ACTION" = add ]; then
 		proto_set_available "$cfg" 1
-	fi
-	if [ "$ACTION" = remove ]; then
+	else
 		proto_set_available "$cfg" 0
 	fi
 	exit 0

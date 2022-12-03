@@ -1,18 +1,22 @@
-# SPDX-License-Identifier: GPL-2.0-only
 #
 # Copyright (C) 2012-2014 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
 
 include $(TOPDIR)/rules.mk
 
 ARCH:=arm
 BOARD:=omap
 BOARDNAME:=TI OMAP3/4/AM33xx
-FEATURES:=usb usbgadget ext4 targz fpu audio display nand rootfs-part squashfs
+FEATURES:=usb usbgadget ext4 targz fpu audio display nand squashfs
 CPU_TYPE:=cortex-a8
 CPU_SUBTYPE:=vfpv3
 
-KERNEL_PATCHVER:=5.10
-KERNEL_TESTING_PATCHVER:=5.15
+KERNEL_PATCHVER:=4.14
+
+MAINTAINER:=Alexander Couzens <lynxis@fe80.eu>
 
 KERNELNAME:=zImage dtbs
 

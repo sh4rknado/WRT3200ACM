@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "qca953x.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 
+#include "qca953x.dtsi"
+
 / {
 	model = "YunCore A770";
-	compatible = "yuncore,a770", "qca,qca9531";
+	compatible = "yuncore,a770", "qca,qca9533";
 
 	aliases {
-		led-boot = &led_status;
-		led-failsafe = &led_status;
-		led-running = &led_status;
-		led-upgrade = &led_status;
+		led-boot = &status;
+		led-failsafe = &status;
+		led-running = &status;
+		led-upgrade = &status;
 	};
 
 	keys {
@@ -31,31 +32,48 @@
 		compatible = "gpio-leds";
 
 		lan {
-			label = "green:lan";
+			label = "a770:green:lan";
 			gpios = <&gpio 16 GPIO_ACTIVE_LOW>;
 		};
 
-		led_status: status {
-			label = "green:status";
+		status: status {
+			label = "a770:green:status";
 			gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
 			default-state = "keep";
 		};
 
 		wan {
-			label = "green:wan";
+			label = "a770:green:wan";
 			gpios = <&gpio 4 GPIO_ACTIVE_LOW>;
 		};
 
 		wlan2g {
-			label = "red:wlan2g";
+			label = "a770:red:wlan2g";
 			gpios = <&gpio 13 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy1tpt";
 		};
 	};
 };
 
+&eth0 {
+	status = "okay";
+
+	phy-handle = <&swphy4>;
+	mtd-mac-address = <&art 0x0>;
+};
+
+&eth1 {
+	mtd-mac-address = <&art 0x6>;
+};
+
+&pcie0 {
+	status = "okay";
+};
+
 &spi {
 	status = "okay";
+
+	num-cs = <1>;
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
@@ -93,21 +111,7 @@
 	};
 };
 
-&eth0 {
-	status = "okay";
-
-	phy-handle = <&swphy4>;
-
-	nvmem-cells = <&macaddr_art_0>;
-	nvmem-cell-names = "mac-address";
-};
-
-&eth1 {
-	nvmem-cells = <&macaddr_art_6>;
-	nvmem-cell-names = "mac-address";
-};
-
-&pcie0 {
+&uart {
 	status = "okay";
 };
 
@@ -115,18 +119,4 @@
 	status = "okay";
 
 	mtd-cal-data = <&art 0x1000>;
-};
-
-&art {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_art_0: macaddr@0 {
-		reg = <0x0 0x6>;
-	};
-
-	macaddr_art_6: macaddr@6 {
-		reg = <0x6 0x6>;
-	};
 };

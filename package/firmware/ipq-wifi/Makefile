@@ -14,8 +14,6 @@ endef
 define Build/Compile
 endef
 
-# Use ath10k-bdencoder from https://github.com/qca/qca-swiss-army-knife.git
-# to generate the board-* files here.
 #
 # This is intended to be used on an interim basis until device-specific
 # board data for new devices is available through the upstream compilation
@@ -23,24 +21,19 @@ endef
 # Please send a mail with your device-specific board files upstream.
 # You can find instructions and examples on the linux-wireless wiki:
 # <https://wireless.wiki.kernel.org/en/users/drivers/ath10k/boardfiles>
+#
 
 ALLWIFIBOARDS:= \
-	aruba_ap-365 \
-	devolo_magic-2-wifi-next \
-	edgecore_ecw5410 \
-	edgecore_oap100 \
-	extreme-networks_ws-ap3915i \
-	glinet_gl-a1300 \
-	glinet_gl-ap1300 \
-	glinet_gl-s1300 \
+	alfa-network_ap120c-ac \
+	asus_map-ac2200 \
+	avm_fritzbox-7530 \
+	avm_fritzrepeater-1200 \
+	avm_fritzrepeater-3000 \
+	engenius_eap1300 \
+	engenius_ens620ext \
+	linksys_ea6350v3 \
 	linksys_ea8300 \
-	p2w_r619ac \
-	pakedge_wr-1 \
-	qxwlan_e2600ac-c1 \
-	qxwlan_e2600ac-c2 \
-	sony_ncp-hg100-cellular \
-	teltonika_rutx \
-	zte_mf289f
+	qxwlan_e2600ac
 
 ALLWIFIPACKAGES:=$(foreach BOARD,$(ALLWIFIBOARDS),ipq-wifi-$(BOARD))
 
@@ -48,7 +41,7 @@ define Package/ipq-wifi-default
   SUBMENU:=ath10k Board-Specific Overrides
   SECTION:=firmware
   CATEGORY:=Firmware
-  DEPENDS:=@(TARGET_ipq40xx||TARGET_ipq806x)
+  DEPENDS:=@TARGET_ipq40xx
   TITLE:=Custom Board
 endef
 
@@ -57,8 +50,10 @@ define ipq-wifi-install-one-to
   $(INSTALL_DATA) $(1) $(2)/lib/firmware/ath10k/$(3)/board-2.bin
 endef
 
+# Note: .bin deprecated; supports existing boards
+
 define ipq-wifi-install-one
-  $(if $(filter $(suffix $(1)),.QCA4019 .qca4019),\
+  $(if $(filter $(suffix $(1)),.QCA4019 .qca4019 .bin),\
     $(call ipq-wifi-install-one-to,$(1),$(2),QCA4019/hw1.0),\
   $(if $(filter $(suffix $(1)),.QCA9888 .qca9888),\
     $(call ipq-wifi-install-one-to,$(1),$(2),QCA9888/hw2.0),\
@@ -101,21 +96,15 @@ endef
 # Place files in this directory as board-<devicename>.<qca4019|qca9888|qca9984>
 # Add $(eval $(call generate-ipq-wifi-package,<devicename>,<display name>))
 
-$(eval $(call generate-ipq-wifi-package,aruba_ap-365,Aruba AP-365))
-$(eval $(call generate-ipq-wifi-package,devolo_magic-2-wifi-next,devolo Magic 2 WiFi next))
-$(eval $(call generate-ipq-wifi-package,edgecore_ecw5410,Edgecore ECW5410))
-$(eval $(call generate-ipq-wifi-package,edgecore_oap100,Edgecore OAP100))
-$(eval $(call generate-ipq-wifi-package,extreme-networks_ws-ap3915i,Edgecore OAP100))
-$(eval $(call generate-ipq-wifi-package,glinet_gl-a1300,GL.iNet GL-A1300))
-$(eval $(call generate-ipq-wifi-package,glinet_gl-ap1300,GL.iNet GL-AP1300))
-$(eval $(call generate-ipq-wifi-package,glinet_gl-s1300,GL.iNet GL-S1300))
+$(eval $(call generate-ipq-wifi-package,alfa-network_ap120c-ac,ALFA Network AP120C-AC))
+$(eval $(call generate-ipq-wifi-package,asus_map-ac2200,ASUS MAP-AC2200))
+$(eval $(call generate-ipq-wifi-package,avm_fritzbox-7530,AVM FRITZ!Box 7530))
+$(eval $(call generate-ipq-wifi-package,avm_fritzrepeater-1200,AVM FRITZRepeater 1200))
+$(eval $(call generate-ipq-wifi-package,avm_fritzrepeater-3000,AVM FRITZ!Repeater 3000))
+$(eval $(call generate-ipq-wifi-package,engenius_eap1300,EnGenius EAP1300))
+$(eval $(call generate-ipq-wifi-package,engenius_ens620ext,EnGenius ENS620EXT))
+$(eval $(call generate-ipq-wifi-package,linksys_ea6350v3,Linksys EA6350v3))
 $(eval $(call generate-ipq-wifi-package,linksys_ea8300,Linksys EA8300))
-$(eval $(call generate-ipq-wifi-package,p2w_r619ac,P&W R619AC))
-$(eval $(call generate-ipq-wifi-package,pakedge_wr-1,Pakedge WR-1))
-$(eval $(call generate-ipq-wifi-package,qxwlan_e2600ac-c1,Qxwlan E2600AC C1))
-$(eval $(call generate-ipq-wifi-package,qxwlan_e2600ac-c2,Qxwlan E2600AC C2))
-$(eval $(call generate-ipq-wifi-package,sony_ncp-hg100-cellular,Sony NCP-HG100/Cellular))
-$(eval $(call generate-ipq-wifi-package,teltonika_rutx,Teltonika RUTX))
-$(eval $(call generate-ipq-wifi-package,zte_mf289f,ZTE MF289F))
+$(eval $(call generate-ipq-wifi-package,qxwlan_e2600ac,Qxwlan E2600AC))
 
 $(foreach PACKAGE,$(ALLWIFIPACKAGES),$(eval $(call BuildPackage,$(PACKAGE))))

@@ -1,23 +1,26 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "ar9344.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "ar9344.dtsi"
 
 / {
 	model = "PowerCloud Systems CAP324";
 	compatible = "pcs,cap324", "qca,ar9344";
 
 	aliases {
-		led-boot = &led_power_amber;
-		led-failsafe = &led_power_amber;
-		led-running = &led_power_green;
-		led-upgrade = &led_power_amber;
+		serial0 = &uart;
+		led-boot = &status;
+		led-failsafe = &status;
+		led-running = &running;
+		led-upgrade = &status;
 	};
 
 	keys {
-		compatible = "gpio-keys";
+		compatible = "gpio-keys-polled";
+		poll-interval = <20>;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&jtag_disable_pins>;
@@ -33,36 +36,36 @@
 	leds {
 		compatible = "gpio-leds";
 
-		led_power_amber: power_amber {
-			label = "amber:power";
+		status: power_amber {
+			label = "pcs:amber:power";
 			gpios = <&gpio 13 GPIO_ACTIVE_LOW>;
 		};
 
-		led_power_green: power_green {
-			label = "green:power";
+		running: power_green {
+			label = "pcs:green:power";
 			gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
 			default-state = "on";
 		};
 
 		wlan_amber {
-			label = "amber:wlan";
+			label = "pcs:amber:wlan";
 			gpios = <&gpio 19 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy1tpt";
 		};
 
 		wlan_green {
-			label = "green:wlan";
+			label = "pcs:green:wlan";
 			gpios = <&gpio 18 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
 
 		lan_amber {
-			label = "amber:lan";
+			label = "pcs:amber:lan";
 			gpios = <&gpio 15 GPIO_ACTIVE_LOW>;
 		};
 
 		lan_green {
-			label = "green:lan";
+			label = "pcs:green:lan";
 			gpios = <&gpio 14 GPIO_ACTIVE_LOW>;
 		};
 	};
@@ -72,7 +75,17 @@
 	clock-frequency = <25000000>;
 };
 
+&uart {
+	status = "okay";
+};
+
+&gpio {
+	status = "okay";
+};
+
 &spi {
+	num-cs = <1>;
+
 	status = "okay";
 
 	flash@0 {
@@ -118,12 +131,11 @@
 	ath9k: wifi@0,0 {
 		compatible = "168c,0030";
 		reg = <0x0000 0 0 0 0>;
-		nvmem-cells = <&macaddr_art_0>;
-		nvmem-cell-names = "mac-address";
-		mac-address-increment = <(-2)>;
+		mtd-mac-address = <&art 0x0>;
+		mtd-mac-address-increment = <(-2)>;
 		mtd-cal-data = <&art 0x5000>;
 		qca,no-eeprom;
-		ieee80211-freq-limit = <2402000 2482000>;
+		qca,disable-5ghz;
 		#gpio-cells = <2>;
 		gpio-controller;
 	};
@@ -132,15 +144,16 @@
 &wmac {
 	status = "okay";
 
-	ieee80211-freq-limit = <4900000 5990000>;
+	qca,disable-2ghz;
 	mtd-cal-data = <&art 0x1000>;
-	nvmem-cells = <&macaddr_art_0>;
-	nvmem-cell-names = "mac-address";
-	mac-address-increment = <(-1)>;
+	mtd-mac-address = <&art 0x0>;
+	mtd-mac-address-increment = <(-1)>;
 };
 
 &mdio0 {
 	status = "okay";
+
+	phy-mask = <0>;
 
 	phy0: ethernet-phy@0 {
 		reg = <0>;
@@ -154,19 +167,8 @@
 	/* default for ar934x, except for 1000M */
 	pll-data = <0x06000000 0x00000101 0x00001616>;
 
-	nvmem-cells = <&macaddr_art_0>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&art 0x0>;
 
 	phy-mode = "rgmii";
 	phy-handle = <&phy0>;
-};
-
-&art {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_art_0: macaddr@0 {
-		reg = <0x0 0x6>;
-	};
 };

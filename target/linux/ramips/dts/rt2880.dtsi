@@ -1,13 +1,7 @@
-/dts-v1/;
-
 / {
 	#address-cells = <1>;
 	#size-cells = <1>;
 	compatible = "ralink,rt2880-soc";
-
-	aliases {
-		serial0 = &uartlite;
-	};
 
 	cpus {
 		#address-cells = <1>;
@@ -21,6 +15,10 @@
 
 	chosen {
 		bootargs = "console=ttyS0,57600";
+	};
+
+	aliases {
+		serial0 = &uartlite;
 	};
 
 	cpuintc: cpuintc {
@@ -81,8 +79,8 @@
 			gpio-controller;
 			#gpio-cells = <2>;
 
-			ngpios = <24>;
 			ralink,gpio-base = <0>;
+			ralink,nr-gpio = <24>;
 			ralink,register-map = [ 00 04 08 0c
 						20 24 28 2c
 						30 34 ];
@@ -95,8 +93,8 @@
 			gpio-controller;
 			#gpio-cells = <2>;
 
-			ngpios = <16>;
 			ralink,gpio-base = <24>;
+			ralink,nr-gpio = <16>;
 			ralink,register-map = [ 00 04 08 0c
 						10 14 18 1c
 						20 24 ];
@@ -111,8 +109,8 @@
 			gpio-controller;
 			#gpio-cells = <2>;
 
-			ngpios = <32>;
 			ralink,gpio-base = <40>;
+			ralink,nr-gpio = <32>;
 			ralink,register-map = [ 00 04 08 0c
 						10 14 18 1c
 						20 24 ];
@@ -155,29 +153,29 @@
 
 		state_default: pinctrl0 {
 			sdram {
-				groups = "sdram";
-				function = "sdram";
+				ralink,group = "sdram";
+				ralink,function = "sdram";
 			};
 		};
 
 		i2c_pins: i2c_pins {
 			i2c_pins {
-				groups = "i2c";
-				function = "i2c";
+				ralink,group = "i2c";
+				ralink,function = "i2c";
 			};
 		};
 
 		spi_pins: spi_pins {
 			spi_pins {
-				groups = "spi";
-				function = "spi";
+				ralink,group = "spi";
+				ralink,function = "spi";
 			};
 		};
 
 		uartlite_pins: uartlite {
 			uart {
-				groups = "uartlite";
-				function = "uartlite";
+				ralink,group = "uartlite";
+				ralink,function = "uartlite";
 			};
 		};
 	};

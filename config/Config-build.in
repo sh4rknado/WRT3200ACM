@@ -1,27 +1,15 @@
-# SPDX-License-Identifier: GPL-2.0-only
-#
 # Copyright (C) 2006-2013 OpenWrt.org
 # Copyright (C) 2016 LEDE Project
-
-config EXPERIMENTAL
-	bool "Enable experimental features by default"
-	default n
-	help
-	  Set this option to build with latest bleeding edge features
-	  which may or may not work as expected.
-	  If you would like to help the development of OpenWrt, you are
-	  encouraged to set this option and provide feedback (both
-	  positive and negative). But do so only if you know how to
-	  recover your device in case of flashing potentially non-working
-	  firmware.
-
-	  If you plan to use this build in production, say NO!
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
 
 menu "Global build settings"
 
 	config JSON_OVERVIEW_IMAGE_INFO
 		bool "Create JSON info file overview per target"
-		default y
+		default BUILDBOT
 		help
 		  Create a JSON info file called profiles.json in the target
 		  directory containing machine readable list of built profiles
@@ -58,16 +46,12 @@ menu "Global build settings"
 		bool "Enable signature checking in opkg"
 		default SIGNED_PACKAGES
 
-	config DOWNLOAD_CHECK_CERTIFICATE
-		bool "Enable TLS certificate verification during package download"
-		default y
-
 	comment "General build options"
 
 	config TESTING_KERNEL
 		bool "Use the testing kernel version"
 		depends on HAS_TESTING_KERNEL
-		default EXPERIMENTAL
+		default n
 		help
 		  If the target supports a newer kernel version than the default,
 		  you can use this config option to enable it
@@ -111,22 +95,13 @@ menu "Global build settings"
 		default n
 		help
 		  This makes file checksums part of package metadata. It increases size
-		  but provides you with pkg_check command to check for flash corruptions.
+		  but provides you with pkg_check command to check for flash coruptions.
 
 	config INCLUDE_CONFIG
 		bool "Include build configuration in firmware" if DEVEL
 		default n
 		help
-		  If enabled, buildinfo files will be stored in /etc/build.* of firmware.
-
-	config REPRODUCIBLE_DEBUG_INFO
-		bool "Make debug information reproducible"
-		default BUILDBOT
-		help
-		  This strips the local build path out of debug information. This has the
-		  advantage of making it reproducible, but the disadvantage of making local
-		  debugging using ./scripts/remote-gdb harder, since the debug data will
-		  no longer point to the full path on the build host.
+		  If enabled, config.buildinfo will be stored in /etc/build.config of firmware.
 
 	config COLLECT_KERNEL_DEBUG
 		bool
@@ -154,12 +129,17 @@ menu "Global build settings"
 		  Adds -g3 to the CFLAGS.
 
 	config IPV6
-		def_bool y
+		bool
+		prompt "Enable IPv6 support in packages"
+		default y
+		help
+		  Enables IPv6 support in kernel (builtin) and packages.
 
 	comment "Stripping options"
 
 	choice
 		prompt "Binary stripping method"
+		default USE_STRIP   if EXTERNAL_TOOLCHAIN
 		default USE_STRIP   if USE_GLIBC
 		default USE_SSTRIP
 		help
@@ -193,14 +173,6 @@ menu "Global build settings"
 		help
 		  Specifies arguments passed to the strip command when stripping binaries.
 
-	config SSTRIP_ARGS
-		string
-		prompt "Sstrip arguments"
-		depends on USE_SSTRIP
-		default "-z"
-		help
-		  Specifies arguments passed to the sstrip command when stripping binaries.
-
 	config STRIP_KERNEL_EXPORTS
 		bool "Strip unnecessary exports from the kernel image"
 		help
@@ -216,6 +188,20 @@ menu "Global build settings"
 		  make the system libraries incompatible with most of the packages that are
 		  not selected during the build process.
 
+	choice
+		prompt "Preferred standard C++ library"
+		default USE_LIBSTDCXX if USE_GLIBC
+		default USE_UCLIBCXX
+		help
+		  Select the preferred standard C++ library for all packages that support this.
+
+		config USE_UCLIBCXX
+			bool "uClibc++"
+
+		config USE_LIBSTDCXX
+			bool "libstdc++"
+	endchoice
+
 	comment "Hardening build options"
 
 	config PKG_CHECK_FORMAT_SECURITY
@@ -227,10 +213,11 @@ menu "Global build settings"
 		  this per package by adding PKG_CHECK_FORMAT_SECURITY:=0 in the package
 		  Makefile.
 
-	choice
+	config PKG_ASLR_PIE
+		bool
 		prompt "User space ASLR PIE compilation"
-		default PKG_ASLR_PIE_NONE if ((SMALL_FLASH || LOW_MEMORY_FOOTPRINT) && !SDK)
-		default PKG_ASLR_PIE_REGULAR
+		select BUSYBOX_DEFAULT_PIE
+		default n
 		help
 		  Add -fPIC to CFLAGS and -specs=hardened-build-ld to LDFLAGS.
 		  This enables package build as Position Independent Executables (PIE)
@@ -241,24 +228,10 @@ menu "Global build settings"
 		  to predict when an attacker is attempting a memory-corruption exploit.
 		  You can disable this per package by adding PKG_ASLR_PIE:=0 in the package
 		  Makefile.
-		  Be ware that ASLR increases the binary size.
-		config PKG_ASLR_PIE_NONE
-			bool "None"
-			help
-			  PIE is deactivated for all applications
-		config PKG_ASLR_PIE_REGULAR
-			bool "Regular"
-			help
-			  PIE is activated for some binaries, mostly network exposed applications
-		config PKG_ASLR_PIE_ALL
-			bool "All"
-			select BUSYBOX_DEFAULT_PIE
-			help
-			  PIE is activated for all applications
-	endchoice
 
 	choice
 		prompt "User space Stack-Smashing Protection"
+		depends on USE_MUSL
 		default PKG_CC_STACKPROTECTOR_REGULAR
 		help
 		  Enable GCC Stack Smashing Protection (SSP) for userspace applications
@@ -266,13 +239,19 @@ menu "Global build settings"
 			bool "None"
 		config PKG_CC_STACKPROTECTOR_REGULAR
 			bool "Regular"
+			select GCC_LIBSSP if !USE_MUSL
+			depends on KERNEL_CC_STACKPROTECTOR_REGULAR
 		config PKG_CC_STACKPROTECTOR_STRONG
 			bool "Strong"
+			select GCC_LIBSSP if !USE_MUSL
+			depends on !GCC_VERSION_4_8
+			depends on KERNEL_CC_STACKPROTECTOR_STRONG
 	endchoice
 
 	choice
 		prompt "Kernel space Stack-Smashing Protection"
 		default KERNEL_CC_STACKPROTECTOR_REGULAR
+		depends on USE_MUSL || !(x86_64 || i386)
 		help
 		  Enable GCC Stack-Smashing Protection (SSP) for the kernel
 		config KERNEL_CC_STACKPROTECTOR_NONE
@@ -280,14 +259,15 @@ menu "Global build settings"
 		config KERNEL_CC_STACKPROTECTOR_REGULAR
 			bool "Regular"
 		config KERNEL_CC_STACKPROTECTOR_STRONG
+			depends on !GCC_VERSION_4_8
 			bool "Strong"
 	endchoice
 
-	config KERNEL_STACKPROTECTOR
+	config  KERNEL_STACKPROTECTOR
 		bool
 		default KERNEL_CC_STACKPROTECTOR_REGULAR || KERNEL_CC_STACKPROTECTOR_STRONG
 
-	config KERNEL_STACKPROTECTOR_STRONG
+	config  KERNEL_STACKPROTECTOR_STRONG
 		bool
 		default KERNEL_CC_STACKPROTECTOR_STRONG
 
@@ -328,59 +308,5 @@ menu "Global build settings"
 		config PKG_RELRO_FULL
 			bool "Full"
 	endchoice
-
-	config TARGET_ROOTFS_SECURITY_LABELS
-		bool
-		select KERNEL_SQUASHFS_XATTR
-		select KERNEL_EXT4_FS_SECURITY
-		select KERNEL_F2FS_FS_SECURITY
-		select KERNEL_UBIFS_FS_SECURITY
-		select KERNEL_JFFS2_FS_SECURITY
-
-	config SELINUX
-		bool "Enable SELinux"
-		select KERNEL_SECURITY_SELINUX
-		select TARGET_ROOTFS_SECURITY_LABELS
-		select PACKAGE_procd-selinux
-		select PACKAGE_busybox-selinux
-		help
-		  This option enables SELinux kernel features, applies security labels
-		  in squashfs rootfs and selects the selinux-variants of busybox and procd.
-
-		  Selecting this option results in about 0.5MiB of additional flash space
-		  usage accounting for increased kernel and rootfs size.
-
-	choice
-		prompt "default SELinux type"
-		depends on TARGET_ROOTFS_SECURITY_LABELS
-		default SELINUXTYPE_dssp
-		help
-		  Select SELinux policy to be installed and used for applying rootfs labels.
-
-		config SELINUXTYPE_targeted
-			bool "targeted"
-			select PACKAGE_refpolicy
-			help
-			  SELinux Reference Policy (refpolicy)
-
-		config SELINUXTYPE_dssp
-			bool "dssp"
-			select PACKAGE_selinux-policy
-			help
-			  Defensec SELinux Security Policy -- OpenWrt edition
-
-	endchoice
-
-	config SECCOMP
-		bool "Enable SECCOMP"
-		select KERNEL_SECCOMP
-		select PACKAGE_procd-seccomp
-		depends on (aarch64 || arm || armeb || mips || mipsel || mips64 || mips64el || i386 || powerpc || x86_64)
-		depends on !TARGET_uml
-		default y
-		help
-		  This option enables seccomp kernel features to safely
-		  execute untrusted bytecode and selects the seccomp-variants
-		  of procd
 
 endmenu

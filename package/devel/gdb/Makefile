@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gdb
-PKG_VERSION:=12.1
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=8.3.1
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=@GNU/gdb
-PKG_HASH:=0e1793bf8f2b54d53f46dea84ccfd446f48f81b297b28c4f7fc017b818d69fed
+PKG_HASH:=1e55b4d7cdca7b34be12f4ceae651623aa73b2fd640152313f9f66a7149757c4
 
 PKG_BUILD_PARALLEL:=1
 PKG_INSTALL:=1
@@ -21,19 +21,18 @@ PKG_LICENSE:=GPL-3.0+
 PKG_CPE_ID:=cpe:/a:gnu:gdb
 
 include $(INCLUDE_DIR)/package.mk
-include $(INCLUDE_DIR)/nls.mk
 
 define Package/gdb/Default
   SECTION:=devel
   CATEGORY:=Development
-  DEPENDS:=+!USE_MUSL:libthread-db $(ICONV_DEPENDS) $(INTL_DEPENDS)
-  URL:=https://www.gnu.org/software/gdb/
+  DEPENDS:=+!USE_MUSL:libthread-db +PACKAGE_zlib:zlib @!arc
+  URL:=http://www.gnu.org/software/gdb/
 endef
 
 define Package/gdb
 $(call Package/gdb/Default)
   TITLE:=GNU Debugger
-  DEPENDS+=+libreadline +libncurses +zlib +libgmp
+  DEPENDS+=+libreadline +libncurses +zlib
 endef
 
 define Package/gdb/description
@@ -55,24 +54,16 @@ endef
 # XXX: add --disable-werror to prevent build failure with arm
 CONFIGURE_ARGS+= \
 	--with-system-readline \
-	--with-system-zlib \
 	--without-expat \
 	--without-lzma \
-	--disable-unit-tests \
-	--disable-ubsan \
 	--disable-sim \
 	--disable-werror \
-	--disable-source-highlight \
-	--without-mpc \
-	--without-mpfr \
-	--without-isl \
-	--with-libgmp-prefix=$(STAGING_DIR)/usr
+	--disable-source-highlight
 
 CONFIGURE_VARS+= \
 	ac_cv_search_tgetent="$(TARGET_LDFLAGS) -lncurses -lreadline"
 
 TARGET_LDFLAGS+= \
-	$(INTL_LDFLAGS) $(if $(INTL_FULL),-lintl) \
 	-static-libstdc++ \
 	-Wl,--gc-sections
 
@@ -80,7 +71,7 @@ define Build/Install
 	$(MAKE) -C $(PKG_BUILD_DIR) \
 		DESTDIR="$(PKG_INSTALL_DIR)" \
 		CPPFLAGS="$(TARGET_CPPFLAGS)" \
-		install-gdb install-gdbserver
+		install-gdb
 endef
 
 define Package/gdb/install

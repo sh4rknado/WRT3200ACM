@@ -1,9 +1,10 @@
-// SPDX-License-Identifier: GPL-2.0-only
-
-#include "ar9132.dtsi"
+// SPDX-License-Identifier: GPL-2.0
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "ar9132.dtsi"
 
 / {
 	compatible = "tplink,tl-wr941-v2", "qca,ar9132";
@@ -14,20 +15,19 @@
 		led-failsafe = &led_system;
 		led-running = &led_system;
 		led-upgrade = &led_system;
-		label-mac-device = &eth0;
 	};
 
 	keys {
 		compatible = "gpio-keys";
 
-		reset {
+		button0 {
 			label = "reset";
 			linux,code = <KEY_RESTART>;
 			gpios = <&gpio 3 GPIO_ACTIVE_LOW>;
 			debounce-interval = <60>;
 		};
 
-		qss {
+		button1 {
 			label = "qss";
 			linux,code = <KEY_WPS_BUTTON>;
 			gpios = <&gpio 7 GPIO_ACTIVE_LOW>;
@@ -39,38 +39,39 @@
 		compatible = "gpio-leds";
 
 		led_system: system {
-			label = "green:system";
+			label = "tp-link:green:system";
 			gpios = <&gpio 2 GPIO_ACTIVE_LOW>;
 		};
 
 		qss_r {
-			label = "red:qss";
+			label = "tp-link:red:qss";
 			gpios = <&gpio 4 GPIO_ACTIVE_HIGH>;
 		};
 
 		qss_g {
-			label = "green:qss";
+			label = "tp-link:green:qss";
 			gpios = <&gpio 5 GPIO_ACTIVE_HIGH>;
 		};
 
 		wlan {
-			label = "green:wlan";
+			label = "tp-link:green:wlan";
 			gpios = <&gpio 9 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
 	};
-};
 
-&mdio0 {
-	status = "okay";
+	dsa {
+		compatible = "marvell,dsa";
+		#address-cells = <1>;
+		#size-cells = <0>;
 
-	switch@0 {
-		compatible = "marvell,mv88e6060";
-		reg = <0>;
+		dsa,mii-bus = <&mdio0>;
+		dsa,ethernet = <&eth0>;
 
-		ports {
+		switch@0 {
 			#address-cells = <1>;
 			#size-cells = <0>;
+			reg = <0>;
 
 			port@0 {
 				reg = <0>;
@@ -100,10 +101,13 @@
 			port@5 {
 				reg = <5>;
 				label = "cpu";
-				ethernet = <&eth0>;
 			};
 		};
 	};
+};
+
+&uart {
+	status = "okay";
 };
 
 &spi {
@@ -140,12 +144,15 @@
 	};
 };
 
+&mdio0 {
+	status = "okay";
+};
+
 &eth0 {
 	status = "okay";
 
 	phy-mode = "rmii";
-	nvmem-cells = <&macaddr_uboot_1fc00>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&uboot 0x1fc00>;
 
 	fixed-link {
 		speed = <100>;
@@ -156,16 +163,5 @@
 &wmac {
 	status = "okay";
 	mtd-cal-data = <&art 0x1000>;
-	nvmem-cells = <&macaddr_uboot_1fc00>;
-	nvmem-cell-names = "mac-address";
-};
-
-&uboot {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_uboot_1fc00: macaddr@1fc00 {
-		reg = <0x1fc00 0x6>;
-	};
+	mtd-mac-address = <&uboot 0x1fc00>;
 };

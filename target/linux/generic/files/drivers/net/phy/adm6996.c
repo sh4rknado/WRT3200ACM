@@ -37,7 +37,6 @@
 #include <linux/ethtool.h>
 #include <linux/phy.h>
 #include <linux/switch.h>
-#include <linux/version.h>
 
 #include <asm/io.h>
 #include <asm/irq.h>
@@ -1048,9 +1047,8 @@ static int adm6996_config_init(struct phy_device *pdev)
 	struct adm6996_priv *priv;
 	int ret;
 
-	linkmode_zero(pdev->supported);
-	linkmode_set_bit(ETHTOOL_LINK_MODE_100baseT_Full_BIT, pdev->supported);
-	linkmode_copy(pdev->advertising, pdev->supported);
+	pdev->supported = ADVERTISED_100baseT_Full;
+	pdev->advertising = ADVERTISED_100baseT_Full;
 
 	if (pdev->mdio.addr != 0) {
 		pr_info ("%s: PHY overlaps ADM6996, providing fixed PHY 0x%x.\n"

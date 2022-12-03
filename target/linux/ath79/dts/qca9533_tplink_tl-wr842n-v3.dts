@@ -1,77 +1,77 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "qca953x.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "qca953x.dtsi"
 
 / {
 	compatible = "tplink,tl-wr842n-v3", "qca,qca9533";
 	model = "TP-Link TL-WR842N v3";
 
 	aliases {
-		led-boot = &led_power;
-		led-failsafe = &led_power;
-		led-running = &led_power;
-		led-upgrade = &led_power;
-		label-mac-device = &eth1;
+		led-boot = &qss_led;
+		led-failsafe = &qss_led;
+		led-running = &qss_led;
+		led-upgrade = &qss_led;
 	};
 
-	leds {
+	gpio_leds: leds {
 		compatible = "gpio-leds";
 
-		led_power: power {
-			label = "green:power";
+		system: power {
+			label = "tp-link:green:power";
 			gpios = <&gpio 2 GPIO_ACTIVE_LOW>;
 			default-state = "on";
 		};
 
 		wifi {
-			label = "green:wlan";
+			label = "tp-link:green:wlan";
 			gpios = <&gpio 3 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
 
-		qss {
-			label = "green:qss";
+		qss_led: qss {
+			label = "tp-link:green:qss";
 			gpios = <&gpio 17 GPIO_ACTIVE_LOW>;
 		};
 
 		wan_green {
-			label = "green:wan";
+			label = "tp-link:green:wan";
 			gpios = <&gpio 11 GPIO_ACTIVE_LOW>;
 		};
 
 		wan_red {
-			label = "red:wan";
+			label = "tp-link:red:wan";
 			gpios = <&gpio 4 GPIO_ACTIVE_LOW>;
 		};
 
 		lan1 {
-			label = "green:lan1";
+			label = "tp-link:green:lan1";
 			gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
 		};
 
 		lan2 {
-			label = "green:lan2";
+			label = "tp-link:green:lan2";
 			gpios = <&gpio 13 GPIO_ACTIVE_LOW>;
 		};
 
 		lan3 {
-			label = "green:lan3";
+			label = "tp-link:green:lan3";
 			gpios = <&gpio 14 GPIO_ACTIVE_LOW>;
 		};
 
 		lan4 {
-			label = "green:lan4";
+			label = "tp-link:green:lan4";
 			gpios = <&gpio 15 GPIO_ACTIVE_LOW>;
 		};
 
 		usb {
-			label = "green:usb";
+			label = "tp-link:green:usb";
 			gpios = <&gpio 16 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "usbport";
-			trigger-sources = <&hub_port0>;
+			trigger-sources = <&hub_port>;
 		};
 	};
 
@@ -94,16 +94,28 @@
 	};
 };
 
-&usb0 {
+&uart {
 	status = "okay";
 };
 
-&usb_phy {
+&usb0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
 	status = "okay";
+
+	hub_port: port@1 {
+		reg = <1>;
+		#trigger-source-cells = <0>;
+	};
+};
+
+&usb_phy {
+        status = "okay";
 };
 
 &spi {
 	status = "okay";
+	num-cs = <1>;
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
@@ -136,35 +148,21 @@
 	};
 };
 
-&eth0 {
-	status = "okay";
-
-	phy-handle = <&swphy4>;
-
-	nvmem-cells = <&macaddr_uboot_1fc00>;
-	nvmem-cell-names = "mac-address";
-	mac-address-increment = <1>;
+&eth1 {
+	mtd-mac-address = <&uboot 0x1fc00>;
 };
 
-&eth1 {
-	nvmem-cells = <&macaddr_uboot_1fc00>;
-	nvmem-cell-names = "mac-address";
+&eth0 {
+	status = "okay";
+	phy-handle = <&swphy4>;
+
+	mtd-mac-address = <&uboot 0x1fc00>;
+	mtd-mac-address-increment = <1>;
 };
 
 &wmac {
 	status = "okay";
-
 	mtd-cal-data = <&art 0x1000>;
-	nvmem-cells = <&macaddr_uboot_1fc00>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&uboot 0x1fc00>;
 };
 
-&uboot {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_uboot_1fc00: macaddr@1fc00 {
-		reg = <0x1fc00 0x6>;
-	};
-};

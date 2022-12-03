@@ -15,7 +15,7 @@ override MAKEFLAGS=
 
 TOOLCHAIN_NAME:=$(VERSION_DIST_SANITIZED)-toolchain-$(if $(CONFIG_VERSION_FILENAMES),$(VERSION_NUMBER)-)$(BOARD)$(if $(SUBTARGET),-$(SUBTARGET))_gcc-$(GCCV)$(DIR_SUFFIX).$(HOST_OS)-$(HOST_ARCH)
 TOOLCHAIN_BUILD_DIR:=$(BUILD_DIR)/$(TOOLCHAIN_NAME)
-EXCLUDE_DIRS:= \
+EXCLUDE_DIRS:=*/ccache \
 	*/initial \
 	*/stamp \
 	*/stampfiles \
@@ -26,17 +26,14 @@ all: compile
 
 TOOLCHAIN_PREFIX:=$(TOOLCHAIN_BUILD_DIR)/toolchain-$(ARCH)$(ARCH_SUFFIX)_gcc-$(GCCV)$(DIR_SUFFIX)
 
-$(BIN_DIR)/$(TOOLCHAIN_NAME).tar.xz: clean
+$(BIN_DIR)/$(TOOLCHAIN_NAME).tar.bz2: clean
 	mkdir -p $(TOOLCHAIN_BUILD_DIR)
 	$(TAR) -cf - -C $(TOPDIR)/staging_dir/  \
 	       $(foreach exclude,$(EXCLUDE_DIRS),--exclude="$(exclude)") \
 	       toolchain-$(ARCH)$(ARCH_SUFFIX)_gcc-$(GCCV)$(DIR_SUFFIX) | \
 	       $(TAR) -xf - -C $(TOOLCHAIN_BUILD_DIR)
 
-	$(CP) \
-		$(TOPDIR)/LICENSES \
-		$(TOPDIR)/COPYING \
-		./files/README.TOOLCHAIN \
+	$(CP)  $(TOPDIR)/LICENSE ./files/README.TOOLCHAIN \
 		$(TOOLCHAIN_BUILD_DIR)/
 
 	$(CP) ./files/wrapper.sh $(TOOLCHAIN_PREFIX)/bin/$(REAL_GNU_TARGET_NAME)-wrapper.sh
@@ -62,14 +59,13 @@ $(BIN_DIR)/$(TOOLCHAIN_NAME).tar.xz: clean
 	find $(TOOLCHAIN_BUILD_DIR) -name CVS | $(XARGS) rm -rf
 	mkdir -p $(BIN_DIR)
 	(cd $(BUILD_DIR); \
-		tar -I '$(STAGING_DIR_HOST)/bin/xz -7e -T$(if $(filter 1,$(NPROC)),2,0)' -cf $@ $(TOOLCHAIN_NAME) \
-		--mtime="$(shell date --date=@$(SOURCE_DATE_EPOCH))"; \
+		tar cfj $@ $(TOOLCHAIN_NAME); \
 	)
 
 download:
 prepare:
-compile: $(BIN_DIR)/$(TOOLCHAIN_NAME).tar.xz
+compile: $(BIN_DIR)/$(TOOLCHAIN_NAME).tar.bz2
 install: compile
 
 clean:
-	rm -rf $(TOOLCHAIN_BUILD_DIR) $(BIN_DIR)/$(TOOLCHAIN_NAME).tar.xz
+	rm -rf $(TOOLCHAIN_BUILD_DIR) $(BIN_DIR)/$(TOOLCHAIN_NAME).tar.bz2

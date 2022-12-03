@@ -1,3 +1,5 @@
+#!/bin/sh
+
 BOOTPART=/dev/sda1
 
 move_config() {
@@ -11,6 +13,8 @@ move_config() {
 			mount -t ext4 -o rw,noatime $BOOTPART /boot
 			[ -f "/boot/$BACKUP_FILE" ] && mv -f "/boot/$BACKUP_FILE" /
 		fi
+		;;
+	*)
 		;;
 	esac
 }

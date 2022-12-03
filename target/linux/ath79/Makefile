@@ -2,13 +2,13 @@ include $(TOPDIR)/rules.mk
 
 ARCH:=mips
 BOARD:=ath79
-BOARDNAME:=Atheros ATH79
+BOARDNAME:=Atheros ATH79 (DTS)
 CPU_TYPE:=24kc
-SUBTARGETS:=generic mikrotik nand tiny
+SUBTARGETS:=generic nand tiny
 
-FEATURES:=ramdisk squashfs usbgadget
+FEATURES:=ramdisk
 
-KERNEL_PATCHVER:=5.15
+KERNEL_PATCHVER:=4.14
 
 include $(INCLUDE_DIR)/target.mk
 

@@ -1,26 +1,41 @@
-# SPDX-License-Identifier: GPL-2.0-only
 #
-# Copyright (C) 2006-2021 OpenWrt.org
-
+# Copyright (C) 2006-2011 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
 include $(TOPDIR)/rules.mk
 
 # UML only makes sense on linux
 ifeq ($(HOST_OS),Linux)
-  ifeq ($(HOST_ARCH),x86_64)
 
-ARCH:=x86_64
+ARCH:=$(shell uname -m | sed \
+	-e 's/i[3-9]86/i386/' \
+	-e 's/mipsel/mips/' \
+	-e 's/mipseb/mips/' \
+	-e 's/powerpc/ppc/' \
+	-e 's/sh[234]/sh/' \
+	-e 's/armeb/arm/' \
+)
 BOARD:=uml
 BOARDNAME:=User Mode Linux
-FEATURES:=audio ext4 rootfs-part squashfs
+FEATURES:=squashfs ext4 audio source-only
+MAINTAINER:=Florian Fainelli <florian@openwrt.org>
 
-KERNEL_PATCHVER:=5.10
-KERNEL_TESTING_PATCHVER:=5.15
+KERNEL_PATCHVER:=4.14
 
 include $(INCLUDE_DIR)/target.mk
 
-DEFAULT_PACKAGES += wpad-basic-wolfssl kmod-mac80211-hwsim mkf2fs e2fsprogs
+define Kernel/Patch
+	mkdir -p $(LINUX_DIR)/arch/um/include/uapi
+	mv $(LINUX_DIR)/arch/um/include/asm $(LINUX_DIR)/arch/um/include/uapi/
+	$(Kernel/Patch/Default)
+endef
 
-  endif
+LINUX_TARGET_CONFIG:=$(CURDIR)/config/$(ARCH)
+
+DEFAULT_PACKAGES += wpad-basic kmod-mac80211-hwsim mkf2fs e2fsprogs
+
 endif
 
 $(eval $(call BuildTarget))

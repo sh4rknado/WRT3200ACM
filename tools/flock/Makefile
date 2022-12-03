@@ -7,8 +7,6 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME := flock
-PKG_VERSION := 2.18
-PKG_RELEASE := 1
 
 include $(INCLUDE_DIR)/host-build.mk
 
@@ -22,10 +20,6 @@ endef
 
 define Host/Install
 	$(INSTALL_BIN) $(HOST_BUILD_DIR)/flock $(STAGING_DIR_HOST)/bin/
-endef
-
-define Host/Clean
-	rm -f $(STAGING_DIR_HOST)/bin/flock
 endef
 
 $(eval $(call HostBuild))

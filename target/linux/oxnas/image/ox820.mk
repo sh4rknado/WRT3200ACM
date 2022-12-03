@@ -1,4 +1,5 @@
-UBIFS_OPTS := -m 2048 -e 126KiB -c 4096
+UBIFS_OPTS = -m 2048 -e 126KiB -c 4096
+DEVICE_VARS += DTS UBIFS_OPTS
 KERNEL_LOADADDR := 0x60008000
 
 define Device/Default
@@ -9,7 +10,8 @@ define Device/Default
   PAGESIZE := 2048
   SUBPAGESIZE := 512
   FILESYSTEMS := squashfs ubifs
-  PROFILES := Default
+  PROFILES = Default $$(DTS)
+  SUPPORTED_DEVICES := $(subst _,$(comma),$(1))
   DEVICE_DTS := ox820-$(subst _,-,$(1))
   KERNEL := kernel-bin | append-dtb | uImage none
   IMAGES := ubinized.bin sysupgrade.tar
@@ -37,48 +39,46 @@ define Build/encrypt-3des
 endef
 
 define Device/akitio_mycloud
-  DEVICE_VENDOR := Akitio
-  DEVICE_MODEL := MyCloud Mini
+  DEVICE_TITLE := Akition myCloud (mini) / SilverStone DC01
   SUPPORTED_DEVICES += akitio
-  DEVICE_PACKAGES := kmod-ata-oxnas-sata kmod-i2c-gpio kmod-rtc-ds1307 \
-	kmod-usb2-oxnas kmod-usb-ledtrig-usbport
+  DEVICE_PACKAGES := kmod-usb2-oxnas kmod-ata-oxnas-sata kmod-usb-ledtrig-usbport \
+                     kmod-i2c-gpio kmod-rtc-ds1307
 endef
 TARGET_DEVICES += akitio_mycloud
 
 define Device/cloudengines_pogoplugpro
-  DEVICE_VENDOR := Cloud Engines
-  DEVICE_MODEL := PogoPlug Pro (with mPCIe)
+  DEVICE_TITLE := Cloud Engines PogoPlug Pro (with mPCIe)
   SUPPORTED_DEVICES += pogoplug-pro
-  DEVICE_PACKAGES := kmod-usb2-oxnas kmod-usb-ledtrig-usbport \
-	kmod-ata-oxnas-sata kmod-rt2800-pci wpad-basic-wolfssl
+  DEVICE_PACKAGES := kmod-usb2-oxnas kmod-usb-ledtrig-usbport kmod-rt2800-pci wpad-basic
 endef
 TARGET_DEVICES += cloudengines_pogoplugpro
 
 define Device/cloudengines_pogoplug-series-3
-  DEVICE_VENDOR := Cloud Engines
-  DEVICE_MODEL := PogoPlug Series V3 (without mPCIe)
+  DEVICE_TITLE := Cloud Engines PogoPlug Series V3 (without mPCIe)
   SUPPORTED_DEVICES += cloudengines,pogoplugv3 pogoplug-v3
-  DEVICE_PACKAGES := kmod-usb2-oxnas kmod-usb-ledtrig-usbport \
-	kmod-ata-oxnas-sata
+  DEVICE_PACKAGES := kmod-usb2-oxnas kmod-usb-ledtrig-usbport
 endef
 TARGET_DEVICES += cloudengines_pogoplug-series-3
 
 define Device/shuttle_kd20
-  DEVICE_VENDOR := Shuttle
-  DEVICE_MODEL := KD20
+  DEVICE_TITLE := Shuttle KD20
   SUPPORTED_DEVICES += kd20
-  DEVICE_PACKAGES := kmod-usb2-oxnas kmod-usb3 kmod-usb-ledtrig-usbport \
-	kmod-i2c-gpio kmod-rtc-pcf8563 kmod-gpio-beeper kmod-hwmon-drivetemp \
-	kmod-hwmon-gpiofan kmod-ata-oxnas-sata kmod-md-mod kmod-md-raid0 \
-	kmod-md-raid1 kmod-fs-ext4 kmod-fs-xfs
+  KERNEL := kernel-bin | append-dtb | uImage none
+  KERNEL_INITRAMFS_PREFIX = $$(IMAGE_PREFIX)-factory
+  KERNEL_INITRAMFS_SUFFIX := .tar.gz
+  KERNEL_INITRAMFS = kernel-bin | append-dtb | uImage none | omninas-factory | encrypt-3des sohmuntitnlaes
+  DEVICE_PACKAGES := kmod-usb2-oxnas kmod-ata-oxnas-sata kmod-usb-ledtrig-usbport \
+                     kmod-usb3 kmod-i2c-gpio kmod-rtc-pcf8563 kmod-gpio-beeper \
+                     kmod-hwmon-core kmod-hwmon-gpiofan \
+                     kmod-md-mod kmod-md-raid0 kmod-md-raid1 kmod-fs-ext4 kmod-fs-xfs
 endef
 TARGET_DEVICES += shuttle_kd20
 
 define Device/mitrastar_stg-212
-  DEVICE_VENDOR := MitraStar
-  DEVICE_MODEL := STG-212
+  DEVICE_TITLE := MitraStar STG-212
   SUPPORTED_DEVICES += stg212
-  DEVICE_PACKAGES := kmod-ata-oxnas-sata kmod-fs-ext4 kmod-fs-xfs \
-	kmod-usb2-oxnas kmod-usb-ledtrig-usbport
+  KERNEL := kernel-bin | append-dtb | uImage none
+  DEVICE_PACKAGES := kmod-usb2-oxnas kmod-ata-oxnas-sata kmod-fs-ext4 kmod-fs-xfs \
+                     kmod-usb-ledtrig-usbport
 endef
 TARGET_DEVICES += mitrastar_stg-212

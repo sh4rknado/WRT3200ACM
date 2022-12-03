@@ -1,34 +1,35 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "ar9331.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "ar9331.dtsi"
 
 / {
 	model = "8devices Carambola2";
 	compatible = "8dev,carambola2", "qca,ar9331";
 
 	aliases {
-		label-mac-device = &wmac;
+		serial0 = &uart;
 	};
 
 	leds {
 		compatible = "gpio-leds";
 
 		wlan {
-			label = "green:wlan";
+			label = "carambola2:green:wlan";
 			gpios = <&gpio 0 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
 
 		eth0 {
-			label = "orange:eth0";
+			label = "carambola2:orange:eth0";
 			gpios = <&gpio 13 GPIO_ACTIVE_HIGH>;
 		};
 
 		eth1 {
-			label = "orange:eth1";
+			label = "carambola2:orange:eth1";
 			gpios = <&gpio 14 GPIO_ACTIVE_HIGH>;
 		};
 	};
@@ -48,6 +49,10 @@
 	clock-frequency = <40000000>;
 };
 
+&uart {
+	status = "okay";
+};
+
 &usb {
 	dr_mode = "host";
 	status = "okay";
@@ -58,11 +63,12 @@
 };
 
 &spi {
+	num-chipselects = <0>;
 	status = "okay";
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
-		spi-max-frequency = <50000000>;
+		spi-max-frequency = <104000000>;
 		reg = <0>;
 
 		partitions {
@@ -70,7 +76,7 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 
-			uboot: partition@0 {
+			uboot:	partition@0 {
 				label = "u-boot";
 				reg = <0x000000 0x040000>;
 				read-only;
@@ -103,8 +109,7 @@
 
 &eth0 {
 	status = "okay";
-	nvmem-cells = <&macaddr_art_0>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&art 0x0>;
 
 	gmac-config {
 		device = <&gmac>;
@@ -116,25 +121,11 @@
 
 &eth1 {
 	status = "okay";
-	nvmem-cells = <&macaddr_art_6>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&art 0x6>;
 };
 
 &wmac {
 	status = "okay";
 	mtd-cal-data = <&art 0x1000>;
-};
-
-&art {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_art_0: macaddr@0 {
-		reg = <0x0 0x6>;
-	};
-
-	macaddr_art_6: macaddr@6 {
-		reg = <0x6 0x6>;
-	};
+	mtd-mac-address = <&art 0x1002>;
 };

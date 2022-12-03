@@ -1,6 +1,8 @@
-# SPDX-License-Identifier: GPL-2.0-only
-#
 # Copyright (C) 2006-2014 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
 
 config KERNEL_BUILD_USER
 	string "Custom Kernel Build User Name"
@@ -24,13 +26,14 @@ config KERNEL_PRINTK
 	bool "Enable support for printk"
 	default y
 
+config KERNEL_CRASHLOG
+	bool "Crash logging"
+	depends on !(arm || powerpc || sparc || TARGET_uml || i386 || x86_64)
+	default y
+
 config KERNEL_SWAP
 	bool "Support for paging of anonymous memory (swap)"
 	default y if !SMALL_FLASH
-
-config KERNEL_PROC_STRIPPED
-	bool "Strip non-essential /proc functionality to reduce code size"
-	default y if SMALL_FLASH
 
 config KERNEL_DEBUG_FS
 	bool "Compile the kernel with debug filesystem enabled"
@@ -41,32 +44,15 @@ config KERNEL_DEBUG_FS
 	  write to these files. Many common debugging facilities, such as
 	  ftrace, require the existence of debugfs.
 
-config KERNEL_MIPS_FP_SUPPORT
-	bool
+config KERNEL_MIPS_FPU_EMULATOR
+	bool "Compile the kernel with MIPS FPU Emulator"
 	default y if TARGET_pistachio
+	depends on (mips || mipsel || mips64 || mips64el)
 
 config KERNEL_ARM_PMU
 	bool
 	default n
 	depends on (arm || aarch64)
-
-config KERNEL_X86_VSYSCALL_EMULATION
-	bool "Enable vsyscall emulation"
-	default n
-	depends on x86_64
-	help
-	  This enables emulation of the legacy vsyscall page.  Disabling
-	  it is roughly equivalent to booting with vsyscall=none, except
-	  that it will also disable the helpful warning if a program
-	  tries to use a vsyscall.  With this option set to N, offending
-	  programs will just segfault, citing addresses of the form
-	  0xffffffffff600?00.
-
-	  This option is required by many programs built before 2013, and
-	  care should be used even with newer programs if set to N.
-
-	  Disabling this option saves about 7K of kernel size and
-	  possibly 4K of additional runtime pagetable memory.
 
 config KERNEL_PERF_EVENTS
 	bool "Compile the kernel with performance events and counters"
@@ -80,178 +66,6 @@ config KERNEL_PROFILING
 	help
 	  Enable the extended profiling support mechanisms used by profilers such
 	  as OProfile.
-
-config KERNEL_RPI_AXIPERF
-	bool "Compile the kernel with RaspberryPi AXI Performance monitors"
-	default y
-	depends on KERNEL_PERF_EVENTS && TARGET_bcm27xx
-
-config KERNEL_UBSAN
-	bool "Compile the kernel with undefined behaviour sanity checker"
-	help
-	  This option enables undefined behaviour sanity checker
-	  Compile-time instrumentation is used to detect various undefined
-	  behaviours in runtime. Various types of checks may be enabled
-	  via boot parameter ubsan_handle
-	  (see: Documentation/dev-tools/ubsan.rst).
-
-config KERNEL_UBSAN_SANITIZE_ALL
-	bool "Enable instrumentation for the entire kernel"
-	depends on KERNEL_UBSAN
-	default y
-	help
-	  This option activates instrumentation for the entire kernel.
-	  If you don't enable this option, you have to explicitly specify
-	  UBSAN_SANITIZE := y for the files/directories you want to check for UB.
-	  Enabling this option will get kernel image size increased
-	  significantly.
-
-config KERNEL_UBSAN_ALIGNMENT
-	bool "Enable checking of pointers alignment"
-	depends on KERNEL_UBSAN
-	help
-	  This option enables detection of unaligned memory accesses.
-	  Enabling this option on architectures that support unaligned
-	  accesses may produce a lot of false positives.
-
-config KERNEL_UBSAN_BOUNDS
-	bool "Perform array index bounds checking"
-	depends on KERNEL_UBSAN
-	help
-	  This option enables detection of directly indexed out of bounds array
-	  accesses, where the array size is known at compile time. Note that
-	  this does not protect array overflows via bad calls to the
-	  {str,mem}*cpy() family of functions (that is addressed by
-	  FORTIFY_SOURCE).
-
-config KERNEL_UBSAN_NULL
-	bool "Enable checking of null pointers"
-	depends on KERNEL_UBSAN
-	help
-	  This option enables detection of memory accesses via a
-	  null pointer.
-
-config KERNEL_UBSAN_TRAP
-	bool "On Sanitizer warnings, abort the running kernel code"
-	depends on KERNEL_UBSAN
-	help
-	  Building kernels with Sanitizer features enabled tends to grow the
-	  kernel size by around 5%, due to adding all the debugging text on
-	  failure paths. To avoid this, Sanitizer instrumentation can just
-	  issue a trap. This reduces the kernel size overhead but turns all
-	  warnings (including potentially harmless conditions) into full
-	  exceptions that abort the running kernel code (regardless of context,
-	  locks held, etc), which may destabilize the system. For some system
-	  builders this is an acceptable trade-off.
-
-config KERNEL_KASAN
-	bool "Compile the kernel with KASan: runtime memory debugger"
-	select KERNEL_SLUB_DEBUG
-	depends on (x86_64 || aarch64)
-	help
-	  Enables kernel address sanitizer - runtime memory debugger,
-	  designed to find out-of-bounds accesses and use-after-free bugs.
-	  This is strictly a debugging feature and it requires a gcc version
-	  of 4.9.2 or later. Detection of out of bounds accesses to stack or
-	  global variables requires gcc 5.0 or later.
-	  This feature consumes about 1/8 of available memory and brings about
-	  ~x3 performance slowdown.
-	  For better error detection enable CONFIG_STACKTRACE.
-	  Currently CONFIG_KASAN doesn't work with CONFIG_DEBUG_SLAB
-	  (the resulting kernel does not boot).
-
-config KERNEL_KASAN_EXTRA
-	bool "KAsan: extra checks"
-	depends on KERNEL_KASAN && KERNEL_DEBUG_KERNEL
-	help
-	  This enables further checks in the kernel address sanitizer, for now
-	  it only includes the address-use-after-scope check that can lead
-	  to excessive kernel stack usage, frame size warnings and longer
-	  compile time.
-	  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81715 has more
-
-config KERNEL_KASAN_VMALLOC
-	bool "Back mappings in vmalloc space with real shadow memory"
-	depends on KERNEL_KASAN
-	help
-	  By default, the shadow region for vmalloc space is the read-only
-	  zero page. This means that KASAN cannot detect errors involving
-	  vmalloc space.
-
-	  Enabling this option will hook in to vmap/vmalloc and back those
-	  mappings with real shadow memory allocated on demand. This allows
-	  for KASAN to detect more sorts of errors (and to support vmapped
-	  stacks), but at the cost of higher memory usage.
-
-	  This option depends on HAVE_ARCH_KASAN_VMALLOC, but we can't
-	  depend on that in here, so it is possible that enabling this
-	  will have no effect.
-
-if KERNEL_KASAN
-	config KERNEL_KASAN_GENERIC
-	def_bool y
-
-	config KERNEL_KASAN_SW_TAGS
-	def_bool n
-endif
-
-choice
-	prompt "Instrumentation type"
-	depends on KERNEL_KASAN
-	default KERNEL_KASAN_OUTLINE
-
-config KERNEL_KASAN_OUTLINE
-	bool "Outline instrumentation"
-	help
-	  Before every memory access compiler insert function call
-	  __asan_load*/__asan_store*. These functions performs check
-	  of shadow memory. This is slower than inline instrumentation,
-	  however it doesn't bloat size of kernel's .text section so
-	  much as inline does.
-
-config KERNEL_KASAN_INLINE
-	bool "Inline instrumentation"
-	help
-	  Compiler directly inserts code checking shadow memory before
-	  memory accesses. This is faster than outline (in some workloads
-	  it gives about x2 boost over outline instrumentation), but
-	  make kernel's .text size much bigger.
-	  This requires a gcc version of 5.0 or later.
-
-endchoice
-
-config KERNEL_KCOV
-	bool "Compile the kernel with code coverage for fuzzing"
-	select KERNEL_DEBUG_FS
-	help
-	  KCOV exposes kernel code coverage information in a form suitable
-	  for coverage-guided fuzzing (randomized testing).
-
-	  If RANDOMIZE_BASE is enabled, PC values will not be stable across
-	  different machines and across reboots. If you need stable PC values,
-	  disable RANDOMIZE_BASE.
-
-	  For more details, see Documentation/kcov.txt.
-
-config KERNEL_KCOV_ENABLE_COMPARISONS
-	bool "Enable comparison operands collection by KCOV"
-	depends on KERNEL_KCOV
-	help
-	  KCOV also exposes operands of every comparison in the instrumented
-	  code along with operand sizes and PCs of the comparison instructions.
-	  These operands can be used by fuzzing engines to improve the quality
-	  of fuzzing coverage.
-
-config KERNEL_KCOV_INSTRUMENT_ALL
-	bool "Instrument all code by default"
-	depends on KERNEL_KCOV
-	default y if KERNEL_KCOV
-	help
-	  If you are doing generic system call fuzzing (like e.g. syzkaller),
-	  then you will want to instrument the whole kernel and you should
-	  say y here. If you are doing more targeted fuzzing (like e.g.
-	  filesystem fuzzing with AFL) then you will want to enable coverage
-	  for more specific subsets of files, and should say n here.
 
 config KERNEL_TASKSTATS
 	bool "Compile the kernel with task resource/io statistics and accounting"
@@ -315,53 +129,6 @@ config KERNEL_FUNCTION_PROFILER
 	depends on KERNEL_FUNCTION_TRACER
 	default n
 
-config KERNEL_IRQSOFF_TRACER
-	bool "Interrupts-off Latency Tracer"
-	depends on KERNEL_FTRACE
-	help
-	  This option measures the time spent in irqs-off critical
-	  sections, with microsecond accuracy.
-
-	  The default measurement method is a maximum search, which is
-	  disabled by default and can be runtime (re-)started
-	  via:
-
-	      echo 0 > /sys/kernel/debug/tracing/tracing_max_latency
-
-	  (Note that kernel size and overhead increase with this option
-	  enabled. This option and the preempt-off timing option can be
-	  used together or separately.)
-
-config KERNEL_PREEMPT_TRACER
-	bool "Preemption-off Latency Tracer"
-	depends on KERNEL_FTRACE
-	help
-	  This option measures the time spent in preemption-off critical
-	  sections, with microsecond accuracy.
-
-	  The default measurement method is a maximum search, which is
-	  disabled by default and can be runtime (re-)started
-	  via:
-
-	      echo 0 > /sys/kernel/debug/tracing/tracing_max_latency
-
-	  (Note that kernel size and overhead increase with this option
-	  enabled. This option and the irqs-off timing option can be
-	  used together or separately.)
-
-config KERNEL_HIST_TRIGGERS
-	bool "Histogram triggers"
-	depends on KERNEL_FTRACE
-	help
-	  Hist triggers allow one or more arbitrary trace event fields to be
-	  aggregated into hash tables and dumped to stdout by reading a
-	  debugfs/tracefs file. They're useful for gathering quick and dirty
-	  (though precise) summaries of event activity as an initial guide for
-	  further investigation using more advanced tools.
-
-	  Inter-event tracing of quantities such as latencies is also
-	  supported using hist triggers under this option.
-
 config KERNEL_DEBUG_KERNEL
 	bool
 	default n
@@ -372,34 +139,6 @@ config KERNEL_DEBUG_INFO
 	select KERNEL_DEBUG_KERNEL
 	help
 	  This will compile your kernel and modules with debug information.
-
-config KERNEL_DEBUG_INFO_BTF
-
-	bool "Enable additional BTF type information"
-	default n
-	depends on !HOST_OS_MACOS
-	depends on KERNEL_DEBUG_INFO && !KERNEL_DEBUG_INFO_REDUCED
-	select DWARVES
-	help
-	  Generate BPF Type Format (BTF) information from DWARF debug info.
-	  Turning this on expects presence of pahole tool, which will convert
-	  DWARF type info into equivalent deduplicated BTF type info.
-
-	  Required to run BPF CO-RE applications.
-
-config KERNEL_DEBUG_INFO_REDUCED
-	bool "Reduce debugging information"
-	default y
-	depends on KERNEL_DEBUG_INFO
-	help
-	  If you say Y here gcc is instructed to generate less debugging
-	  information for structure types. This means that tools that
-	  need full debugging information (like kgdb or systemtap) won't
-	  be happy. But if you merely need debugging information to
-	  resolve line numbers there is no loss. Advantage is that
-	  build directory object sizes shrink dramatically over a full
-	  DEBUG_INFO build and compile times are reduced too.
-	  Only works with newer gcc versions.
 
 config KERNEL_DEBUG_LL_UART_NONE
 	bool
@@ -413,14 +152,6 @@ config KERNEL_DEBUG_LL
 	select KERNEL_DEBUG_LL_UART_NONE
 	help
 	  ARM low level debugging.
-
-config KERNEL_DEBUG_VIRTUAL
-	bool "Compile the kernel with VM translations debugging"
-	select KERNEL_DEBUG_KERNEL
-	default n
-	help
-	  Enable checks sanity checks to catch invalid uses of
-	  virt_to_phys()/phys_to_virt() against the non-linear address space.
 
 config KERNEL_DYNAMIC_DEBUG
 	bool "Compile the kernel with dynamic printk"
@@ -459,67 +190,28 @@ config KERNEL_KPROBES
 	  instrumentation and testing.
 	  If in doubt, say "N".
 
+config KERNEL_KPROBE_EVENT
+	bool
+	default y if KERNEL_KPROBES
+
 config KERNEL_KPROBE_EVENTS
 	bool
 	default y if KERNEL_KPROBES
 
-config KERNEL_BPF_EVENTS
-	bool "Compile the kernel with BPF event support"
-	default n
-	select KERNEL_KPROBES
-	help
-	  Allows to attach BPF programs to kprobe, uprobe and tracepoint events.
-	  This is required to use BPF maps of type BPF_MAP_TYPE_PERF_EVENT_ARRAY
-	  for sending data from BPF programs to user-space for post-processing
-	  or logging.
-
-config KERNEL_BPF_KPROBE_OVERRIDE
-	bool
-	default n
-	depends on KERNEL_KPROBES
-
 config KERNEL_AIO
 	bool "Compile the kernel with asynchronous IO support"
-	default y if !SMALL_FLASH
-
-config KERNEL_IO_URING
-	bool "Compile the kernel with io_uring support"
-	default y if !SMALL_FLASH
+	default n
 
 config KERNEL_FHANDLE
 	bool "Compile the kernel with support for fhandle syscalls"
-	default y if !SMALL_FLASH
+	default n
 
 config KERNEL_FANOTIFY
 	bool "Compile the kernel with modern file notification support"
-	default y if !SMALL_FLASH
+	default n
 
 config KERNEL_BLK_DEV_BSG
 	bool "Compile the kernel with SCSI generic v4 support for any block device"
-	default n
-
-config KERNEL_TRANSPARENT_HUGEPAGE
-	bool
-
-choice
-	prompt "Transparent Hugepage Support sysfs defaults"
-	depends on KERNEL_TRANSPARENT_HUGEPAGE
-	default KERNEL_TRANSPARENT_HUGEPAGE_ALWAYS
-
-	config KERNEL_TRANSPARENT_HUGEPAGE_ALWAYS
-		bool "always"
-
-	config KERNEL_TRANSPARENT_HUGEPAGE_MADVISE
-		bool "madvise"
-endchoice
-
-config KERNEL_HUGETLBFS
-	bool
-
-config KERNEL_HUGETLB_PAGE
-	bool "Compile the kernel with HugeTLB support"
-	select KERNEL_TRANSPARENT_HUGEPAGE
-	select KERNEL_HUGETLBFS
 	default n
 
 config KERNEL_MAGIC_SYSRQ
@@ -546,62 +238,6 @@ config KERNEL_PROVE_LOCKING
 	bool "Enable kernel lock checking"
 	select KERNEL_DEBUG_KERNEL
 	default n
-
-config KERNEL_SOFTLOCKUP_DETECTOR
-	bool "Compile the kernel with detect Soft Lockups"
-	depends on KERNEL_DEBUG_KERNEL
-	help
-	  Say Y here to enable the kernel to act as a watchdog to detect
-	  soft lockups.
-
-	  Softlockups are bugs that cause the kernel to loop in kernel
-	  mode for more than 20 seconds, without giving other tasks a
-	  chance to run.  The current stack trace is displayed upon
-	  detection and the system will stay locked up.
-
-config KERNEL_DETECT_HUNG_TASK
-	bool "Compile the kernel with detect Hung Tasks"
-	depends on KERNEL_DEBUG_KERNEL
-	default KERNEL_SOFTLOCKUP_DETECTOR
-	help
-	  Say Y here to enable the kernel to detect "hung tasks",
-	  which are bugs that cause the task to be stuck in
-	  uninterruptible "D" state indefinitely.
-
-	  When a hung task is detected, the kernel will print the
-	  current stack trace (which you should report), but the
-	  task will stay in uninterruptible state. If lockdep is
-	  enabled then all held locks will also be reported. This
-	  feature has negligible overhead.
-
-config KERNEL_WQ_WATCHDOG
-	bool "Compile the kernel with detect Workqueue Stalls"
-	depends on KERNEL_DEBUG_KERNEL
-	help
-	  Say Y here to enable stall detection on workqueues.  If a
-	  worker pool doesn't make forward progress on a pending work
-	  item for over a given amount of time, 30s by default, a
-	  warning message is printed along with dump of workqueue
-	  state.  This can be configured through kernel parameter
-	  "workqueue.watchdog_thresh" and its sysfs counterpart.
-
-config KERNEL_DEBUG_ATOMIC_SLEEP
-	bool "Compile the kernel with sleep inside atomic section checking"
-	depends on KERNEL_DEBUG_KERNEL
-	help
-	  If you say Y here, various routines which may sleep will become very
-	  noisy if they are called inside atomic sections: when a spinlock is
-	  held, inside an rcu read side critical section, inside preempt disabled
-	  sections, inside an interrupt, etc...
-
-config KERNEL_DEBUG_VM
-	bool "Compile the kernel with debug VM"
-	depends on KERNEL_DEBUG_KERNEL
-	help
-	  Enable this to turn on extended checks in the virtual-memory system
-          that may impact performance.
-
-	  If unsure, say N.
 
 config KERNEL_PRINTK_TIME
 	bool "Enable printk timestamps"
@@ -630,14 +266,10 @@ config KERNEL_KEXEC
 config KERNEL_PROC_VMCORE
 	bool
 
-config KERNEL_PROC_KCORE
-	bool
-
 config KERNEL_CRASH_DUMP
 	depends on i386 || x86_64 || arm || armeb
 	select KERNEL_KEXEC
 	select KERNEL_PROC_VMCORE
-	select KERNEL_PROC_KCORE
 	bool "Enable support for kexec crashdump"
 	default y
 
@@ -666,23 +298,23 @@ if KERNEL_DEVTMPFS
 endif
 
 config KERNEL_KEYS
-	bool "Enable kernel access key retention support"
-	default !SMALL_FLASH
+    bool "Enable kernel access key retention support"
+    default n
 
 config KERNEL_PERSISTENT_KEYRINGS
-	bool "Enable kernel persistent keyrings"
-	depends on KERNEL_KEYS
-	default n
-
-config KERNEL_KEYS_REQUEST_CACHE
-	bool "Enable temporary caching of the last request_key() result"
-	depends on KERNEL_KEYS
-	default n
+    bool "Enable kernel persistent keyrings"
+    depends on KERNEL_KEYS
+    default n
 
 config KERNEL_BIG_KEYS
-	bool "Enable large payload keys on kernel keyrings"
-	depends on KERNEL_KEYS
-	default n
+    bool "Enable large payload keys on kernel keyrings"
+    depends on KERNEL_KEYS
+    default n
+
+config KERNEL_ENCRYPTED_KEYS
+    tristate "Enable keys with encrypted payloads on kernel keyrings"
+    depends on KERNEL_KEYS
+    default n
 
 #
 # CGROUP support symbols
@@ -690,7 +322,7 @@ config KERNEL_BIG_KEYS
 
 config KERNEL_CGROUPS
 	bool "Enable kernel cgroups"
-	default y if !SMALL_FLASH
+	default n
 
 if KERNEL_CGROUPS
 
@@ -704,29 +336,21 @@ if KERNEL_CGROUPS
 
 	config KERNEL_FREEZER
 		bool
+		default y if KERNEL_CGROUP_FREEZER
 
 	config KERNEL_CGROUP_FREEZER
-		bool "legacy Freezer cgroup subsystem"
-		default n
-		select KERNEL_FREEZER
+		bool "Freezer cgroup subsystem"
+		default y
 		help
 		  Provides a way to freeze and unfreeze all tasks in a
 		  cgroup.
-		  (legacy cgroup1-only controller, in cgroup2 freezer
-		  is integrated in the Memory controller)
 
 	config KERNEL_CGROUP_DEVICE
-		bool "legacy Device controller for cgroups"
-		default n
+		bool "Device controller for cgroups"
+		default y
 		help
 		  Provides a cgroup implementing whitelists for devices which
 		  a process in the cgroup can mknod or open.
-		  (legacy cgroup1-only controller)
-
-	config KERNEL_CGROUP_HUGETLB
-		bool "HugeTLB controller"
-		default n
-		select KERNEL_HUGETLB_PAGE
 
 	config KERNEL_CGROUP_PIDS
 		bool "PIDs cgroup subsystem"
@@ -735,17 +359,9 @@ if KERNEL_CGROUPS
 		  Provides enforcement of process number limits in the scope of a
 		  cgroup.
 
-	config KERNEL_CGROUP_RDMA
-		bool "RDMA controller for cgroups"
-		default y
-
-	config KERNEL_CGROUP_BPF
-		bool "Support for eBPF programs attached to cgroups"
-		default y
-
 	config KERNEL_CPUSETS
 		bool "Cpuset support"
-		default y
+		default n
 		help
 		  This option will let you create and manage CPUSETs which
 		  allow dynamically partitioning a system into sets of CPUs and
@@ -759,14 +375,14 @@ if KERNEL_CGROUPS
 
 	config KERNEL_CGROUP_CPUACCT
 		bool "Simple CPU accounting cgroup subsystem"
-		default y
+		default n
 		help
 		  Provides a simple Resource Controller for monitoring the
 		  total CPU consumed by the tasks in a cgroup.
 
 	config KERNEL_RESOURCE_COUNTERS
 		bool "Resource counters"
-		default y
+		default n
 		help
 		  This option enables controller independent resource accounting
 		  infrastructure that works with cgroups.
@@ -777,8 +393,7 @@ if KERNEL_CGROUPS
 
 	config KERNEL_MEMCG
 		bool "Memory Resource Controller for Control Groups"
-		default y
-		select KERNEL_FREEZER
+		default n
 		depends on KERNEL_RESOURCE_COUNTERS || !LINUX_3_18
 		help
 		  Provides a memory resource controller that manages both anonymous
@@ -801,7 +416,7 @@ if KERNEL_CGROUPS
 
 	config KERNEL_MEMCG_SWAP
 		bool "Memory Resource Controller Swap Extension"
-		default y
+		default n
 		depends on KERNEL_MEMCG
 		help
 		  Add swap management feature to memory resource controller. When you
@@ -836,7 +451,7 @@ if KERNEL_CGROUPS
 
 	config KERNEL_MEMCG_KMEM
 		bool "Memory Resource Controller Kernel Memory accounting (EXPERIMENTAL)"
-		default y
+		default n
 		depends on KERNEL_MEMCG
 		help
 		  The Kernel Memory extension for Memory Resource Controller can limit
@@ -857,7 +472,7 @@ if KERNEL_CGROUPS
 
 	menuconfig KERNEL_CGROUP_SCHED
 		bool "Group CPU scheduler"
-		default y
+		default n
 		help
 		  This feature lets CPU scheduler recognize task groups and control CPU
 		  bandwidth allocation to such task groups. It uses cgroups to group
@@ -867,11 +482,11 @@ if KERNEL_CGROUPS
 
 		config KERNEL_FAIR_GROUP_SCHED
 			bool "Group scheduling for SCHED_OTHER"
-			default y
+			default n
 
 		config KERNEL_CFS_BANDWIDTH
 			bool "CPU bandwidth provisioning for FAIR_GROUP_SCHED"
-			default y
+			default n
 			depends on KERNEL_FAIR_GROUP_SCHED
 			help
 			  This option allows users to define CPU bandwidth rates (limits) for
@@ -882,7 +497,7 @@ if KERNEL_CGROUPS
 
 		config KERNEL_RT_GROUP_SCHED
 			bool "Group scheduling for SCHED_RR/FIFO"
-			default y
+			default n
 			help
 			  This feature lets you explicitly allocate real CPU bandwidth
 			  to task groups. If enabled, it will also make it impossible to
@@ -917,7 +532,7 @@ if KERNEL_CGROUPS
 
 		config KERNEL_BLK_DEV_THROTTLING
 			bool "Enable throttling policy"
-			default y
+			default y if TARGET_brcm2708
 
 		config KERNEL_BLK_DEV_THROTTLING_LOW
 			bool "Block throttling .low limit interface support (EXPERIMENTAL)"
@@ -933,16 +548,12 @@ if KERNEL_CGROUPS
 		  files in a cgroup which can be useful for debugging.
 
 	config KERNEL_NET_CLS_CGROUP
-		bool "legacy Control Group Classifier"
-		default n
+		bool "Control Group Classifier"
+		default y
 
-	config KERNEL_CGROUP_NET_CLASSID
-		bool "legacy Network classid cgroup"
-		default n
-
-	config KERNEL_CGROUP_NET_PRIO
-		bool "legacy Network priority cgroup"
-		default n
+	config KERNEL_NETPRIO_CGROUP
+		bool "Network priority cgroup"
+		default y
 
 endif
 
@@ -952,7 +563,7 @@ endif
 
 config KERNEL_NAMESPACES
 	bool "Enable kernel namespaces"
-	default y if !SMALL_FLASH
+	default n
 
 if KERNEL_NAMESPACES
 
@@ -994,40 +605,51 @@ if KERNEL_NAMESPACES
 
 endif
 
-config KERNEL_DEVPTS_MULTIPLE_INSTANCES
-	bool "Support multiple instances of devpts"
-	default y if !SMALL_FLASH
-	help
-	  Enable support for multiple instances of devpts filesystem.
-	  If you want to have isolated PTY namespaces (eg: in containers),
-	  say Y here. Otherwise, say N. If enabled, each mount of devpts
-	  filesystem with the '-o newinstance' option will create an
-	  independent PTY namespace.
+#
+# LXC related symbols
+#
 
-config KERNEL_POSIX_MQUEUE
-	bool "POSIX Message Queues"
-	default y if !SMALL_FLASH
-	help
-	  POSIX variant of message queues is a part of IPC. In POSIX message
-	  queues every message has a priority which decides about succession
-	  of receiving it by a process. If you want to compile and run
-	  programs written e.g. for Solaris with use of its POSIX message
-	  queues (functions mq_*) say Y here.
+config KERNEL_LXC_MISC
+	bool "Enable miscellaneous LXC related options"
+	default n
 
-	  POSIX message queues are visible as a filesystem called 'mqueue'
-	  and can be mounted somewhere if you want to do filesystem
-	  operations on message queues.
+if KERNEL_LXC_MISC
 
+	config KERNEL_DEVPTS_MULTIPLE_INSTANCES
+		bool "Support multiple instances of devpts"
+		default y
+		help
+		  Enable support for multiple instances of devpts filesystem.
+		  If you want to have isolated PTY namespaces (eg: in containers),
+		  say Y here. Otherwise, say N. If enabled, each mount of devpts
+		  filesystem with the '-o newinstance' option will create an
+		  independent PTY namespace.
+
+	config KERNEL_POSIX_MQUEUE
+		bool "POSIX Message Queues"
+		default y
+		help
+		  POSIX variant of message queues is a part of IPC. In POSIX message
+		  queues every message has a priority which decides about succession
+		  of receiving it by a process. If you want to compile and run
+		  programs written e.g. for Solaris with use of its POSIX message
+		  queues (functions mq_*) say Y here.
+
+		  POSIX message queues are visible as a filesystem called 'mqueue'
+		  and can be mounted somewhere if you want to do filesystem
+		  operations on message queues.
+
+endif
 
 config KERNEL_SECCOMP_FILTER
 	bool
-	default y if !SMALL_FLASH
+	default n
 
 config KERNEL_SECCOMP
 	bool "Enable seccomp support"
 		depends on !(TARGET_uml)
 		select KERNEL_SECCOMP_FILTER
-		default y if !SMALL_FLASH
+		default n
 		help
 		  Build kernel with support for seccomp.
 
@@ -1041,19 +663,6 @@ config KERNEL_IP_MROUTE
 	help
 	  Multicast routing requires a multicast routing daemon in
 	  addition to kernel support.
-
-if KERNEL_IP_MROUTE
-
-	config KERNEL_IP_MROUTE_MULTIPLE_TABLES
-		def_bool y
-
-	config KERNEL_IP_PIMSM_V1
-		def_bool y
-
-	config KERNEL_IP_PIMSM_V2
-		def_bool y
-
-endif
 
 #
 # IPv6 configuration
@@ -1077,52 +686,10 @@ if KERNEL_IPV6
 		  Multicast routing requires a multicast routing daemon in
 		  addition to kernel support.
 
-	if KERNEL_IPV6_MROUTE
-
-		config KERNEL_IPV6_MROUTE_MULTIPLE_TABLES
-			def_bool y
-
-		config KERNEL_IPV6_PIMSM_V2
-			def_bool y
-
-	endif
-
-	config KERNEL_IPV6_SEG6_LWTUNNEL
-		bool "Enable support for lightweight tunnels"
-		default y if !SMALL_FLASH
-		help
-		  Using lwtunnel (needed for IPv6 segment routing) requires ip-full package.
-
-	config KERNEL_LWTUNNEL_BPF
+	config KERNEL_IPV6_PIMSM_V2
 		def_bool n
 
 endif
-
-#
-# Miscellaneous network configuration
-#
-
-config KERNEL_NET_L3_MASTER_DEV
-	bool "L3 Master device support"
-	help
-	  This module provides glue between core networking code and device
-	  drivers to support L3 master devices like VRF.
-
-config KERNEL_WIRELESS_EXT
-	def_bool n
-
-config KERNEL_WEXT_CORE
-	def_bool KERNEL_WIRELESS_EXT
-
-config KERNEL_WEXT_PRIV
-	def_bool KERNEL_WIRELESS_EXT
-
-config KERNEL_WEXT_PROC
-	def_bool KERNEL_WIRELESS_EXT
-
-config KERNEL_WEXT_SPY
-	def_bool KERNEL_WIRELESS_EXT
-
 
 #
 # NFS related symbols
@@ -1265,11 +832,8 @@ config KERNEL_SQUASHFS_FRAGMENT_CACHE_SIZE
 	default 2 if (SMALL_FLASH && !LOW_MEMORY_FOOTPRINT)
 	default 3
 
-config KERNEL_SQUASHFS_XATTR
-	bool "Squashfs XATTR support"
-
 #
-# compile optimization setting
+# compile optimiziation setting
 #
 choice
 	prompt "Compiler optimization level"
@@ -1289,59 +853,3 @@ config KERNEL_CC_OPTIMIZE_FOR_SIZE
 	  your compiler resulting in a smaller kernel.
 
 endchoice
-
-config KERNEL_AUDIT
-	bool "Auditing support"
-
-config KERNEL_SECURITY
-	bool "Enable different security models"
-
-config KERNEL_SECURITY_NETWORK
-	bool "Socket and Networking Security Hooks"
-	select KERNEL_SECURITY
-
-config KERNEL_SECURITY_SELINUX
-	bool "NSA SELinux Support"
-	select KERNEL_SECURITY_NETWORK
-	select KERNEL_AUDIT
-
-config KERNEL_SECURITY_SELINUX_BOOTPARAM
-	bool "NSA SELinux boot parameter"
-	depends on KERNEL_SECURITY_SELINUX
-	default y
-
-config KERNEL_SECURITY_SELINUX_DISABLE
-	bool "NSA SELinux runtime disable"
-	depends on KERNEL_SECURITY_SELINUX
-
-config KERNEL_SECURITY_SELINUX_DEVELOP
-	bool "NSA SELinux Development Support"
-	depends on KERNEL_SECURITY_SELINUX
-	default y
-
-config KERNEL_SECURITY_SELINUX_SIDTAB_HASH_BITS
-	int
-	depends on KERNEL_SECURITY_SELINUX
-	default 9
-
-config KERNEL_SECURITY_SELINUX_SID2STR_CACHE_SIZE
-	int
-	depends on KERNEL_SECURITY_SELINUX
-	default 256
-
-config KERNEL_LSM
-	string
-	default "lockdown,yama,loadpin,safesetid,integrity,selinux"
-	depends on KERNEL_SECURITY_SELINUX
-
-config KERNEL_EXT4_FS_SECURITY
-	bool "Ext4 Security Labels"
-
-config KERNEL_F2FS_FS_SECURITY
-	bool "F2FS Security Labels"
-
-config KERNEL_UBIFS_FS_SECURITY
-	bool "UBIFS Security Labels"
-
-config KERNEL_JFFS2_FS_SECURITY
-	bool "JFFS2 Security Labels"

@@ -7,22 +7,22 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=elfutils
-PKG_VERSION:=0.188
+PKG_VERSION:=0.177
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=https://sourceware.org/$(PKG_NAME)/ftp/$(PKG_VERSION)
-PKG_HASH:=fb8b0e8d0802005b9a309c60c1d8de32dd2951b56f0c3a3cb56d21ce01595dff
-
+PKG_HASH:=fa489deccbcae7d8c920f60d85906124c1989c591196d90e0fd668e3dc05042e
 PKG_MAINTAINER:=Luiz Angelo Daros de Luca <luizluca@gmail.com>
-PKG_LICENSE:=GPL-3.0-or-later
+PKG_LICENSE:=GPL-3.0+
 PKG_LICENSE_FILES:=COPYING COPYING-GPLV2 COPYING-LGPLV3
 PKG_CPE_ID:=cpe:/a:elfutils_project:elfutils
-
 PKG_FIXUP:=autoreconf
+
 PKG_INSTALL:=1
-PKG_USE_MIPS16:=1
-PKG_BUILD_DEPENDS:=!USE_GLIBC:argp-standalone
+PKG_USE_MIPS16:=0
+
+PKG_BUILD_DEPENDS:=USE_UCLIBC:argp-standalone USE_MUSL:argp-standalone
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/nls.mk
@@ -43,7 +43,7 @@ endef
 
 define Package/libdw
   $(call Package/elfutils/Default)
-  DEPENDS:=+libelf +libbz2 +USE_MUSL:musl-fts
+  DEPENDS:=+libelf +libbz2
   TITLE+= (libdw)
 endef
 
@@ -60,26 +60,9 @@ else
 CONFIGURE_ARGS += --disable-nls
 endif
 
-HOST_CONFIGURE_ARGS += \
-	--disable-shared \
-	--disable-nls \
-	--disable-debuginfod \
-	--disable-libdebuginfod \
-	--without-lzma \
-	--without-zstd
-
 CONFIGURE_ARGS += \
 	--program-prefix=eu- \
-	--disable-debuginfod \
-	--disable-libdebuginfod \
-	--without-lzma \
-	--without-zstd
-
-HOST_CONFIGURE_VARS += \
-	ac_cv_search__obstack_free=yes
-
-CONFIGURE_VARS += \
-	ac_cv_search__obstack_free=yes
+	--without-lzma
 
 TARGET_CFLAGS += -D_GNU_SOURCE -Wno-unused-result -Wno-format-nonliteral
 
@@ -110,7 +93,6 @@ define Package/libelf/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libelf{-*.so,*.so.*} $(1)/usr/lib/
 endef
 
-# these lines need to be ordered by dependency because of ABI versioning
-$(eval $(call BuildPackage,libelf))
-$(eval $(call BuildPackage,libdw))
 $(eval $(call BuildPackage,libasm))
+$(eval $(call BuildPackage,libdw))
+$(eval $(call BuildPackage,libelf))

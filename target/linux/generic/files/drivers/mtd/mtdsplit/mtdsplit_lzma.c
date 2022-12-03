@@ -13,7 +13,6 @@
 #include <linux/slab.h>
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/partitions.h>
-#include <linux/of.h>
 
 #include <asm/unaligned.h>
 

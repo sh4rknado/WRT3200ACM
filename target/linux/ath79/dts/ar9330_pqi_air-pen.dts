@@ -1,37 +1,40 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "ar9330.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "ar9330.dtsi"
 
 / {
 	model = "PQI Air-Pen";
 	compatible = "pqi,air-pen", "qca,ar9330";
 
 	aliases {
-		led-boot = &led_wlan;
-		led-failsafe = &led_wlan;
-		led-upgrade = &led_wlan;
+		serial0 = &uart;
+		led-boot = &wlan;
+		led-failsafe = &wlan;
+		led-upgrade = &wlan;
 	};
 
 	leds {
 		compatible = "gpio-leds";
 
-		led_wlan: wlan {
-			label = "blue:wlan";
+		wlan: wlan {
+			label = "air-pen:blue:wlan";
 			gpios = <&gpio 0 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "phy0tpt";
 		};
 
 		wps {
-			label = "blue:wps";
+			label = "air-pen:blue:wps";
 			gpios = <&gpio 23 GPIO_ACTIVE_HIGH>;
 		};
 	};
 
 	keys {
-		compatible = "gpio-keys";
+		compatible = "gpio-keys-polled";
+		poll-interval = <100>;
 
 		wps {
 			label = "wps";
@@ -49,6 +52,10 @@
 	};
 };
 
+&uart {
+	status = "okay";
+};
+
 &usb {
 	dr_mode = "host";
 	status = "okay";
@@ -59,11 +66,12 @@
 };
 
 &spi {
+	num-cs = <1>;
 	status = "okay";
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
-		spi-max-frequency = <50000000>;
+		spi-max-frequency = <104000000>;
 		reg = <0>;
 
 		partitions {
@@ -112,8 +120,7 @@
 &eth0 {
 	status = "okay";
 
-	nvmem-cells = <&macaddr_art_1002>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&art 0x1002>;
 
 	gmac-config {
 		device = <&gmac>;
@@ -125,28 +132,11 @@
 
 &eth1 {
 	status = "okay";
-
 	compatible = "syscon", "simple-mfd";
 };
 
 &wmac {
 	status = "okay";
-
 	mtd-cal-data = <&art 0x1000>;
-	nvmem-cells = <&macaddr_art_2>;
-	nvmem-cell-names = "mac-address";
-};
-
-&art {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_art_2: macaddr@2 {
-		reg = <0x2 0x6>;
-	};
-
-	macaddr_art_1002: macaddr@1002 {
-		reg = <0x1002 0x6>;
-	};
+	mtd-mac-address = <&art 0x2>;
 };

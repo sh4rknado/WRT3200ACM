@@ -7,11 +7,11 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mpc
-PKG_VERSION:=1.2.1
+PKG_VERSION:=1.1.0
 
 PKG_SOURCE_URL:=@GNU/mpc/
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_HASH:=17503d2c395dfcf106b622dc142683c1199431d095367c6aacba6eec30340459
+PKG_HASH:=6985c538143c1208dcb1ac42cedad6ff52e267b47e5f970183a3e75125b43c2e
 
 HOST_BUILD_PARALLEL:=1
 
@@ -24,9 +24,5 @@ HOST_CONFIGURE_ARGS += \
 	--disable-shared \
 	--with-mpfr=$(TOPDIR)/staging_dir/host \
 	--with-gmp=$(TOPDIR)/staging_dir/host
-
-define Host/Uninstall
-	-$(call Host/Compile/Default,uninstall)
-endef
 
 $(eval $(call HostBuild))

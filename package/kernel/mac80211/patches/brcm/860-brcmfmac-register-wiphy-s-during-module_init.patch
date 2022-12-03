@@ -11,6 +11,16 @@ module loads successfully.
 Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
 
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -1554,6 +1554,7 @@ int __init brcmf_core_init(void)
+ {
+ 	if (!schedule_work(&brcmf_driver_work))
+ 		return -EBUSY;
++	flush_work(&brcmf_driver_work);
+ 
+ 	return 0;
+ }
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
 @@ -431,6 +431,7 @@ struct brcmf_fw {
@@ -20,8 +30,8 @@ Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 +	struct completion *completion;
  };
  
- #ifdef CONFIG_EFI
-@@ -655,6 +656,8 @@ static void brcmf_fw_request_done(const
+ static void brcmf_fw_request_done(const struct firmware *fw, void *ctx);
+@@ -638,6 +639,8 @@ static void brcmf_fw_request_done(const
  		fwctx->req = NULL;
  	}
  	fwctx->done(fwctx->dev, ret, fwctx->req);
@@ -30,16 +40,16 @@ Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
  	kfree(fwctx);
  }
  
-@@ -695,6 +698,8 @@ int brcmf_fw_get_firmwares(struct device
+@@ -662,6 +665,8 @@ int brcmf_fw_get_firmwares(struct device
  {
  	struct brcmf_fw_item *first = &req->items[0];
  	struct brcmf_fw *fwctx;
 +	struct completion completion;
 +	unsigned long time_left;
- 	char *alt_path = NULL;
  	int ret;
  
-@@ -712,6 +717,9 @@ int brcmf_fw_get_firmwares(struct device
+ 	brcmf_dbg(TRACE, "enter: dev=%s\n", dev_name(dev));
+@@ -678,6 +683,9 @@ int brcmf_fw_get_firmwares(struct device
  	fwctx->dev = dev;
  	fwctx->req = req;
  	fwctx->done = fw_cb;
@@ -47,9 +57,9 @@ Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 +	init_completion(&completion);
 +	fwctx->completion = &completion;
  
- 	/* First try alternative board-specific path if any */
- 	if (fwctx->req->board_type)
-@@ -730,6 +738,12 @@ int brcmf_fw_get_firmwares(struct device
+ 	ret = request_firmware_nowait(THIS_MODULE, true, first->path,
+ 				      fwctx->dev, GFP_KERNEL, fwctx,
+@@ -685,6 +693,12 @@ int brcmf_fw_get_firmwares(struct device
  	if (ret < 0)
  		brcmf_fw_request_done(NULL, fwctx);
  

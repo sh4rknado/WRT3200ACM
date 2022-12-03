@@ -16,7 +16,7 @@ linksys_get_target_firmware() {
 			"${cur_boot_part}" "${mtd_ubi0}"
 	fi
 
-	# OEM U-Boot for EA6350v3, EA8300 and MR8300; bootcmd=
+	# OEM U-Boot for EA6350v3 and EA8300; bootcmd=
 	#  if test $auto_recovery = no;
 	#      then bootipq;
 	#  elif test $boot_part = 1;
@@ -45,6 +45,10 @@ linksys_get_target_firmware() {
 		return
 		;;
 	esac
+}
+
+linksys_get_root_magic() {
+	(get_image "$@" | dd skip=786432 bs=4 count=1 | hexdump -v -n 4 -e '1/1 "%02x"') 2>/dev/null
 }
 
 platform_do_upgrade_linksys() {
@@ -96,7 +100,23 @@ platform_do_upgrade_linksys() {
 	}
 
 	[ "$magic_long" = "27051956" ] && {
-		echo "writing \"$1\" image to \"$part_label\""
-		get_image "$1" | mtd write - "$part_label"
+		# This magic is for a uImage (which is a sysupgrade image)
+		# check firmwares' rootfs types
+		local oldroot="$(linksys_get_root_magic "$target_mtd")"
+		local newroot="$(linksys_get_root_magic "$1")"
+
+		if [ "$newroot" = "55424923" ] && [ "$oldroot" = "55424923" ]; then
+			# we're upgrading from a firmware with UBI to one with UBI
+			# erase everything to be safe
+			# - Is that really needed? Won't remove (or comment) the if,
+			#   because it may be needed in a future device.
+			#mtd erase $part_label
+			#get_image "$1" | mtd -n write - $part_label
+			echo "writing \"$1\" UBI image to \"$part_label\" (UBI)..."
+			get_image "$1" | mtd write - "$part_label"
+		else
+			echo "writing \"$1\" image to \"$part_label\""
+			get_image "$1" | mtd write - "$part_label"
+		fi
 	}
 }

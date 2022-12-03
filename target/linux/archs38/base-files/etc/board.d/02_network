@@ -1,3 +1,4 @@
+#!/bin/sh
 #
 # Copyright (C) 2016 OpenWrt.org
 #
@@ -7,8 +8,7 @@
 board_config_update
 
 case "$(board_name)" in
-snps,axs103|\
-snps,hsdk)
+"arc-sdp"*|"arc-hsdk"*)
 	ucidef_set_interface_lan "eth0" "dhcp"
 	;;
 esac

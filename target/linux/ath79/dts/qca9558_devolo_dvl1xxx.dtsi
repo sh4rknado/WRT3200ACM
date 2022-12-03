@@ -10,10 +10,12 @@
  * antennas and number of spatial streams.
  */
 
-#include "qca955x.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "qca9557.dtsi"
 
 / {
 	keys {
@@ -40,8 +42,17 @@
 	status = "okay";
 };
 
+&uart {
+	status = "okay";
+};
+
+&gpio {
+	status = "okay";
+};
+
 &spi {
 	status = "okay";
+	num-cs = <1>;
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
@@ -91,40 +102,44 @@
 
 	phy4: ethernet-phy@4 {
 		reg = <4>;
-		eee-broken-100tx;
-		eee-broken-1000t;
+		at803x-disable-smarteee;
 	};
 };
 
 &eth0 {
 	status = "okay";
 
-	nvmem-cells = <&macaddr_art_0>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&art 0x00>;
 	phy-handle = <&phy4>;
+	pll-data = <0xae000000 0x80000101 0x80001313>;
 
 	gmac_config: gmac-config {
 		device = <&gmac>;
 
+		rxdv-delay = <3>;
+		rxd-delay = <3>;
+		txen-delay = <0>;
+		txd-delay = <0>;
 		rgmii-enabled = <1>;
 	};
 };
 
-&wmac {
-	status = "okay";
-
-	mtd-cal-data = <&art 0x1000>;
-	nvmem-cells = <&macaddr_art_0>;
-	nvmem-cell-names = "mac-address";
-	mac-address-increment = <(-2)>;
+&mdio1 {
+	phy1: ethernet-phy@1 {
+		reg = <1>;
+	};
 };
 
-&art {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
+&eth1 {
+	mtd-mac-address = <&art 0x00>;
+	mtd-mac-address-increment = <1>;
+	phy-handle = <&phy1>;
+	pll-data = <0x03000101 0x00000101 0x00001313>;
+};
 
-	macaddr_art_0: macaddr@0 {
-		reg = <0x0 0x6>;
-	};
+&wmac {
+	status = "okay";
+	mtd-cal-data = <&art 0x1000>;
+	mtd-mac-address = <&art 0x00>;
+	mtd-mac-address-increment = <(-2)>;
 };

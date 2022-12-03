@@ -43,8 +43,9 @@ define Host/Install
 	ln -sf aclocal $(STAGING_DIR_HOST)/bin/aclocal-1.15
 endef
 
-define Host/Uninstall
-	-$(call Host/Compile/Default,uninstall)
+define Host/Clean
+	-$(MAKE) -C $(HOST_BUILD_DIR) uninstall
+	$(call Host/Clean/Default)
 endef
 
 $(eval $(call HostBuild))

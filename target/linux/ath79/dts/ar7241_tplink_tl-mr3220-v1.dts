@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/dts-v1/;
 
 #include "ar7241_tplink_tl-mr3x20.dtsi"
 
@@ -10,7 +11,7 @@
 		compatible = "gpio-leds";
 
 		wlan {
-			label = "green:wlan";
+			label = "tp-link:green:wlan";
 			gpios = <&ath9k 1 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};

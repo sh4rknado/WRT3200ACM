@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "qca956x.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "qca956x.dtsi"
 
 / {
 	model = "NEC Aterm WG800HP";
 	compatible = "nec,wg800hp", "qca,qca9563";
 
 	aliases {
-		led-boot = &led_power_green;
-		led-failsafe = &led_power_red;
-		led-running = &led_power_green;
-		led-upgrade = &led_power_green;
+		led-boot = &power_green;
+		led-failsafe = &power_red;
+		led-running = &power_green;
+		led-upgrade = &power_green;
 	};
 
 	leds {
@@ -22,44 +23,44 @@
 		pinctrl-0 = <&jtag_disable_pins>;
 
 		wlan2g_red {
-			label = "red:wlan2g";
+			label = "wg800hp:red:wlan2g";
 			gpios = <&gpio 6 GPIO_ACTIVE_LOW>;
 		};
 
 		active_red {
-			label = "red:active";
+			label = "wg800hp:red:active";
 			gpios = <&gpio 7 GPIO_ACTIVE_LOW>;
 		};
 
 		active_green {
-			label = "green:active";
+			label = "wg800hp:green:active";
 			gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
 		};
 
-		led_power_red: power_red {
-			label = "red:power";
+		power_red: power_red {
+			label = "wg800hp:red:power";
 			gpios = <&gpio 14 GPIO_ACTIVE_LOW>;
 		};
 
-		led_power_green: power_green {
-			label = "green:power";
+		power_green: power_green {
+			label = "wg800hp:green:power";
 			gpios = <&gpio 15 GPIO_ACTIVE_LOW>;
 			default-state = "on";
 		};
 
 		wlan5g_red {
-			label = "red:wlan5g";
+			label = "wg800hp:red:wlan5g";
 			gpios = <&gpio 16 GPIO_ACTIVE_HIGH>;
 		};
 
 		wlan5g_green {
-			label = "green:wlan5g";
+			label = "wg800hp:green:wlan5g";
 			gpios = <&gpio 17 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "phy0tpt";
 		};
 
 		wlan2g_green {
-			label = "green:wlan2g";
+			label = "wg800hp:green:wlan2g";
 			gpios = <&gpio 19 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy1tpt";
 		};
@@ -94,6 +95,7 @@
 
 &spi {
 	status = "okay";
+	num-cs = <1>;
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
@@ -169,6 +171,10 @@
 };
 
 &pcie {
+	status = "okay";
+};
+
+&uart {
 	status = "okay";
 };
 

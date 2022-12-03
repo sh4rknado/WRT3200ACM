@@ -2,7 +2,6 @@
 
 #include "ox820.dtsi"
 
-#include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 
 / {
@@ -38,12 +37,12 @@
 
 		reset {
 			label = "reset";
-			gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio1 11 1>;
 			linux,code = <KEY_RESTART>;
 		};
 		copy {
 			label = "copy";
-			gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio1 13 1>;
 			linux,code = <KEY_COPY>;
 		};
 	};
@@ -52,15 +51,15 @@
 		compatible = "gpio-leds";
 		led_status: status {
 			label = "zyxel:blue:status";
-			gpios = <&gpio1 5 GPIO_ACTIVE_HIGH>;
+			gpios = <&gpio1 5 0>;
 		};
 		led_warn: status2 {
 			label = "zyxel:red:status";
-			gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio1 6 1>;
 		};
 		copy {
 			label = "zyxel:orange:copy";
-			gpios = <&gpio1 8 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio1 8 1>;
 			trigger-sources = <&ehci_port1>, <&ehci_port2>;
 			linux,default-trigger = "usbport";
 		};
@@ -68,8 +67,7 @@
 
 	i2c-gpio {
 		compatible = "i2c-gpio";
-		gpios = <&gpio1  9 GPIO_ACTIVE_HIGH
-		         &gpio1 10 GPIO_ACTIVE_HIGH>;
+		gpios = <&gpio1 9 0 &gpio1 10 0>;
 		i2c-gpio,delay-us = <10>;
 	};
 };

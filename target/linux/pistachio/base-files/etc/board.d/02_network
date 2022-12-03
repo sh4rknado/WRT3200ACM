@@ -1,8 +1,13 @@
-# SPDX-License-Identifier: GPL-2.0-only
+#!/bin/sh
 #
 # Copyright (C) 2017 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
 
 . /lib/functions/uci-defaults.sh
+
 
 board_config_update
 

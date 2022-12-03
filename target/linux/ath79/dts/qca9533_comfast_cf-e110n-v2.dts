@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "qca953x.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "qca953x.dtsi"
 
 / {
 	compatible = "comfast,cf-e110n-v2", "qca,qca9533";
@@ -11,9 +12,9 @@
 
 	aliases {
 		serial0 = &uart;
-		led-boot = &led_rssihigh;
-		led-failsafe = &led_rssihigh;
-		led-upgrade = &led_rssihigh;
+		led-boot = &wan;
+		led-failsafe = &wan;
+		led-upgrade = &wan;
 	};
 
 	leds {
@@ -22,33 +23,33 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&jtag_disable_pins &led_rssilow_pin &led_rssimediumhigh_pin &led_rssihigh_pin>;
 
-		wan {
-			label = "green:wan";
+		wan: wan {
+			label = "cf-e110n-v2:green:wan";
 			gpios = <&gpio 3 GPIO_ACTIVE_LOW>;
 		};
 
 		lan {
-			label = "green:lan";
+			label = "cf-e110n-v2:green:lan";
 			gpios = <&gpio 2 GPIO_ACTIVE_LOW>;
 		};
 
 		rssilow {
-			label = "red:rssilow";
+			label = "cf-e110n-v2:red:rssilow";
 			gpios = <&gpio 11 GPIO_ACTIVE_LOW>;
 		};
 
 		rssimediumlow {
-			label = "red:rssimediumlow";
+			label = "cf-e110n-v2:red:rssimediumlow";
 			gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
 		};
 
 		rssimediumhigh {
-			label = "green:rssimediumhigh";
+			label = "cf-e110n-v2:green:rssimediumhigh";
 			gpios = <&gpio 14 GPIO_ACTIVE_LOW>;
 		};
 
-		led_rssihigh: rssihigh {
-			label = "green:rssihigh";
+		rssihigh {
+			label = "cf-e110n-v2:green:rssihigh";
 			gpios = <&gpio 16 GPIO_ACTIVE_LOW>;
 		};
 	};
@@ -57,14 +58,15 @@
 		compatible = "gpio-leds";
 
 		wlan {
-			label = "green:wlan";
+			label = "cf-e110n-v2:green:wlan";
 			gpios = <&gpio 0 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
 	};
 
 	keys {
-		compatible = "gpio-keys";
+		compatible = "gpio-keys-polled";
+		poll-interval = <20>;
 
 		reset {
 			label = "reset";
@@ -91,6 +93,7 @@
 
 &spi {
 	status = "okay";
+	num-cs = <1>;
 
 	flash@0 {
 		compatible = "winbond,w25q128", "jedec,spi-nor";
@@ -129,18 +132,19 @@
 	};
 };
 
+&uart {
+	status = "okay";
+};
+
 &eth0 {
 	status = "okay";
-
+	mtd-mac-address = <&art 0x0>;
 	phy-handle = <&swphy4>;
-
-	nvmem-cells = <&macaddr_art_0>;
-	nvmem-cell-names = "mac-address";
 };
 
 &eth1 {
-	nvmem-cells = <&macaddr_art_1002>;
-	nvmem-cell-names = "mac-address";
+	status = "okay";
+	mtd-mac-address = <&art 0x1002>;
 
 	gmac-config {
 		device = <&gmac>;
@@ -149,26 +153,6 @@
 
 &wmac {
 	status = "okay";
-
 	mtd-cal-data = <&art 0x1000>;
-	nvmem-cells = <&macaddr_art_6>;
-	nvmem-cell-names = "mac-address";
-};
-
-&art {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_art_0: macaddr@0 {
-		reg = <0x0 0x6>;
-	};
-
-	macaddr_art_6: macaddr@6 {
-		reg = <0x6 0x6>;
-	};
-
-	macaddr_art_1002: macaddr@1002 {
-		reg = <0x1002 0x6>;
-	};
+	mtd-mac-address = <&art 0x6>;
 };

@@ -8,12 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=kexec-tools
-PKG_VERSION:=2.0.21
+PKG_VERSION:=2.0.16
 PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=@KERNEL/linux/utils/kernel/kexec
-PKG_HASH:=e113142dee891638ad96e0f72cf9277b244477619470b30c41999d312e8e8702
+PKG_HASH:=5b103351ad752c9badd1d65b00eb6de4bce579f944f4df4e3ef3a755ba567010
+
+PKG_FIXUP:=autoreconf
 
 PKG_CONFIG_DEPENDS := CONFIG_KEXEC_ZLIB CONFIG_KEXEC_LZMA
 
@@ -23,6 +25,7 @@ define Package/kexec-tools/Default
   SECTION:=utils
   CATEGORY:=Utilities
   URL:=http://kernel.org/pub/linux/kernel/people/horms/kexec-tools/
+  MAINTAINER:=Florian Fainelli <florian@openwrt.org>
 endef
 
 define Package/kexec-tools
@@ -108,7 +111,7 @@ endef
 
 define Package/kdump/install
 	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/init.d $(1)/etc/config $(1)/etc/uci-defaults
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/vmcore-dmesg $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/kdump $(PKG_INSTALL_DIR)/usr/sbin/vmcore-dmesg $(1)/usr/sbin
 	$(INSTALL_BIN) ./files/kdump.init $(1)/etc/init.d/kdump
 	$(INSTALL_BIN) ./files/kdump.defaults $(1)/etc/uci-defaults/kdump
 	$(INSTALL_CONF) ./files/kdump.config $(1)/etc/config/kdump

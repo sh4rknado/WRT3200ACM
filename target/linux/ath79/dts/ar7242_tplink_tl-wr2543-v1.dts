@@ -1,28 +1,35 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
-
-#include "ar7242.dtsi"
+/dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+
+#include "ar7242.dtsi"
 
 / {
 	compatible = "tplink,tl-wr2543-v1", "qca,ar7242";
 	model = "TP-Link TL-WR2543N/ND";
 
 	aliases {
-		led-boot = &led_wps;
-		led-failsafe = &led_wps;
-		led-running = &led_wps;
-		led-upgrade = &led_wps;
-		label-mac-device = &eth0;
+		led-boot = &system;
+		led-failsafe = &system;
+		led-running = &system;
+		led-upgrade = &system;
 	};
 
 	chosen {
 		bootargs = "console=ttyS0,115200n8";
 	};
 
+	extosc: ref {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <40000000>;
+	};
+
 	keys {
-		compatible = "gpio-keys";
+		compatible = "gpio-keys-polled";
+		poll-interval = <20>;
 
 		reset {
 			label = "reset";
@@ -42,13 +49,13 @@
 	leds {
 		compatible = "gpio-leds";
 
-		led_wps: wps {
-			label = "green:wps";
+		system: wps {
+			label = "tplink:green:wps";
 			gpios = <&gpio 0 GPIO_ACTIVE_LOW>;
 		};
 
 		usb {
-			label = "green:usb";
+			label = "tplink:green:usb";
 			gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
 			trigger-sources = <&hub_port>;
 			linux,default-trigger = "usbport";
@@ -59,13 +66,13 @@
 		compatible = "gpio-leds";
 
 		wlan2g {
-			label = "green:wlan2g";
+			label = "tplink:green:wlan2g";
 			gpios = <&ath9k 0 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
 
 		wlan5g {
-			label = "green:wlan5g";
+			label = "tplink:green:wlan5g";
 			gpios = <&ath9k 1 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "phy0tpt";
 		};
@@ -89,21 +96,25 @@
 	};
 };
 
+&pll {
+	clocks = <&extosc>;
+};
+
 &spi {
 	status = "okay";
+	num-cs = <1>;
 
 	flash@0 {
 		compatible = "jedec,spi-nor";
 		reg = <0>;
 		spi-max-frequency = <25000000>;
-		m25p,fast-read;
 
 		partitions {
 			compatible = "fixed-partitions";
 			#address-cells = <1>;
 			#size-cells = <1>;
 
-			uboot: partition@0 {
+			uboot:	partition@0 {
 				label = "u-boot";
 				reg = <0x000000 0x020000>;
 				read-only;
@@ -124,8 +135,19 @@
 	};
 };
 
-&usb {
+&uart {
 	status = "okay";
+};
+
+&usb {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+	hub_port: port@1 {
+		reg = <1>;
+		#trigger-source-cells = <0>;
+	};
 };
 
 &usb_phy {
@@ -140,8 +162,7 @@
 		#gpio-cells = <2>;
 		gpio-controller;
 		qca,no-eeprom;
-		nvmem-cells = <&macaddr_uboot_1fc00>;
-		nvmem-cell-names = "mac-address";
+		mtd-mac-address = <&uboot 0x1fc00>;
 	};
 };
 
@@ -149,22 +170,11 @@
 	status = "okay";
 
 	phy-mode = "rgmii";
-	nvmem-cells = <&macaddr_uboot_1fc00>;
-	nvmem-cell-names = "mac-address";
+	mtd-mac-address = <&uboot 0x1fc00>;
 
 	phy-handle = <&phy0>;
 	fixed-link {
 		speed = <1000>;
 		full-duplex;
-	};
-};
-
-&uboot {
-	compatible = "nvmem-cells";
-	#address-cells = <1>;
-	#size-cells = <1>;
-
-	macaddr_uboot_1fc00: macaddr@1fc00 {
-		reg = <0x1fc00 0x6>;
 	};
 };

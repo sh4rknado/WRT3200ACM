@@ -1,6 +1,9 @@
-# SPDX-License-Identifier: GPL-2.0-only
 #
-# Copyright (C) 2006-2020 OpenWrt.org
+# Copyright (C) 2006-2015 OpenWrt.org
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
 
 ifneq ($(__prereq_inc),1)
 __prereq_inc:=1
@@ -49,7 +52,7 @@ endef
 
 define RequireCommand
   define Require/$(1)
-    command -v $(1)
+    which $(1)
   endef
 
   $$(eval $$(call Require,$(1),$(2)))
@@ -63,16 +66,16 @@ define RequireHeader
   $$(eval $$(call Require,$(1),$(2)))
 endef
 
-define CleanupPython2
-  define Require/python2-cleanup
+define CleanupPython3
+  define Require/python3-cleanup
 	if [ -f "$(STAGING_DIR_HOST)/bin/python" ] && \
 		$(STAGING_DIR_HOST)/bin/python -V 2>&1 | \
-		grep -q 'Python 2'; then \
+		grep -q 'Python 3'; then \
 			rm $(STAGING_DIR_HOST)/bin/python; \
 	fi
   endef
 
-  $$(eval $$(call Require,python2-cleanup))
+  $$(eval $$(call Require,python3-cleanup))
 endef
 
 define QuoteHostCommand
@@ -103,7 +106,7 @@ define SetupHostCommand
 	           $(call QuoteHostCommand,$(11)) $(call QuoteHostCommand,$(12)); do \
 		if [ -n "$$$$$$$$cmd" ]; then \
 			bin="$$$$$$$$(PATH="$(subst $(space),:,$(filter-out $(STAGING_DIR_HOST)/%,$(subst :,$(space),$(PATH))))" \
-				command -v "$$$$$$$${cmd%% *}")"; \
+				which "$$$$$$$${cmd%% *}")"; \
 			if [ -x "$$$$$$$$bin" ] && eval "$$$$$$$$cmd" >/dev/null 2>/dev/null; then \
 				mkdir -p "$(STAGING_DIR_HOST)/bin"; \
 				ln -sf "$$$$$$$$bin" "$(STAGING_DIR_HOST)/bin/$(strip $(1))"; \

@@ -84,6 +84,7 @@ static inline void uninit_pmu(void)
 
 static inline void reset_ppe(struct platform_device *pdev)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,14,0)
 	struct device *dev = &pdev->dev;
 	struct reset_control *dsp;
 	struct reset_control *dfe;
@@ -120,6 +121,7 @@ static inline void reset_ppe(struct platform_device *pdev)
 	udelay(1000);
 	*PP32_SRST |= 0x000303CF;
 	udelay(1000);
+#endif
 }
 
 static inline void init_pdma(void)
@@ -246,21 +248,13 @@ static inline int pp32_download_code(int pp32, u32 *code_src, unsigned int code_
  * ####################################
  */
 
-void ifx_ptm_get_fw_ver(unsigned int *major, unsigned int *mid, unsigned int *minor)
+extern void ifx_ptm_get_fw_ver(unsigned int *major, unsigned int *minor)
 {
     ASSERT(major != NULL, "pointer is NULL");
     ASSERT(minor != NULL, "pointer is NULL");
 
-    if ( *(volatile unsigned int *)FW_VER_ID_NEW == 0 ) {
-        *major = FW_VER_ID->major;
-        *mid   = ~0;
-        *minor = FW_VER_ID->minor;
-    }
-    else {
-        *major = FW_VER_ID_NEW->major;
-        *mid   = FW_VER_ID_NEW->middle;
-        *minor = FW_VER_ID_NEW->minor;
-    }
+    *major = FW_VER_ID->major;
+    *minor = FW_VER_ID->minor;
 }
 
 void ifx_ptm_init_chip(struct platform_device *pdev)
