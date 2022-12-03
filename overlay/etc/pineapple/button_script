@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# User configurable button script
-
-echo "REBOOT" > /dev/console
-sync
-reboot
