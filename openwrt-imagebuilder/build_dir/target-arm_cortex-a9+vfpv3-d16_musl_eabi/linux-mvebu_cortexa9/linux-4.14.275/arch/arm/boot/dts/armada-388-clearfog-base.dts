@@ -1,0 +1,161 @@
+/*
+ * Device Tree file for SolidRun Clearfog Base revision A1 rev 2.0 (88F6828)
+ *
+ *  Copyright (C) 2015 Russell King
+ *
+ * This board is in development; the contents of this file work with
+ * the A1 rev 2.0 of the board, which does not represent final
+ * production board.  Things will change, don't expect this file to
+ * remain compatible info the future.
+ *
+ * This file is dual-licensed: you can use it either under the terms
+ * of the GPL or the X11 license, at your option. Note that this dual
+ * licensing only applies to this file, and not this project as a
+ * whole.
+ *
+ *  a) This file is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU General Public License
+ *     version 2 as published by the Free Software Foundation.
+ *
+ *     This file is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ * Or, alternatively,
+ *
+ *  b) Permission is hereby granted, free of charge, to any person
+ *     obtaining a copy of this software and associated documentation
+ *     files (the "Software"), to deal in the Software without
+ *     restriction, including without limitation the rights to use,
+ *     copy, modify, merge, publish, distribute, sublicense, and/or
+ *     sell copies of the Software, and to permit persons to whom the
+ *     Software is furnished to do so, subject to the following
+ *     conditions:
+ *
+ *     The above copyright notice and this permission notice shall be
+ *     included in all copies or substantial portions of the Software.
+ *
+ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ *     OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/dts-v1/;
+#include "armada-388-clearfog.dtsi"
+#include "armada-38x-solidrun-microsom-emmc.dtsi"
+
+/ {
+	model = "SolidRun Clearfog Base A1";
+	compatible = "solidrun,clearfog-base-a1",
+		"solidrun,clearfog-a1", "marvell,armada388",
+		"marvell,armada385", "marvell,armada380";
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		pinctrl-0 = <&rear_button_pins>;
+		pinctrl-names = "default";
+
+		button_0 {
+			/* The rear SW3 button */
+			label = "Rear Button";
+			gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
+			linux,can-disable;
+			linux,code = <BTN_0>;
+		};
+	};
+};
+
+&eth1 {
+	phy = <&phy1>;
+};
+
+&gpio0 {
+	phy1_reset {
+		gpio-hog;
+		gpios = <19 GPIO_ACTIVE_LOW>;
+		output-low;
+		line-name = "phy1-reset";
+	};
+};
+
+&mdio {
+	pinctrl-0 = <&mdio_pins &microsom_phy_clk_pins &clearfog_phy_pins>;
+	phy1: ethernet-phy@1 {
+		/*
+		 * Annoyingly, the marvell phy driver configures the LED
+		 * register, rather than preserving reset-loaded setting.
+		 * We undo that rubbish here.
+		 */
+		marvell,reg-init = <3 16 0 0x101e>;
+		reg = <1>;
+	};
+};
+
+&pinctrl {
+	/* phy1 reset */
+	clearfog_phy_pins: clearfog-phy-pins {
+		marvell,pins = "mpp19";
+		marvell,function = "gpio";
+	};
+	rear_button_pins: rear-button-pins {
+		marvell,pins = "mpp44";
+		marvell,function = "gpio";
+	};
+};
+
+/*
+MPP
+18: pu	gpio		pca9655 int
+19:	gpio		phy reset
+20: pu	gpio		sd0 detect
+21:	sd0:cmd
+22: pd	gpio		mikro int
+23:
+
+24:	ua1:rxd		mikro rx
+25:	ua1:txd		mikro tx
+26: pu	i2c1:sck
+27: pu	i2c1:sda
+28:	sd0:clk
+29: pd	gpio		mikro rst
+30:
+31:
+
+32:
+33:
+34:
+35:
+36:
+37:	sd0:d3
+38:	sd0:d0
+39:	sd0:d1
+
+40:	sd0:d2
+41:
+42:
+43:	spi1:cs2	mikro cs
+44:	gpio		rear button sw3
+45:	ref:clk_out0	phy#0 clock
+46:	ref:clk_out1	phy#1 clock
+47:
+
+48:	gpio		J18 spare gpio
+49:	gpio		U10 I2C_IRQ(GNSS)
+50:	gpio		board id?
+51:
+52:
+53:
+54:	gpio		mikro pwm
+55:
+
+56: pu	spi1:mosi	mikro mosi
+57: pd	spi1:sck	mikro sck
+58:	spi1:miso	mikro miso
+59:
+*/
